@@ -87,6 +87,7 @@ const addToast = (type, message) => {
 const page = usePage();
 
 // Watch for flash messages from Inertia
+// UI-03 FIX: { immediate: true } agar toast muncul saat mount awal (setelah redirect)
 watch(() => page.props.flash, (flash) => {
   if (flash?.success) {
     addToast('success', flash.success);
@@ -94,5 +95,5 @@ watch(() => page.props.flash, (flash) => {
   if (flash?.error) {
     addToast('error', flash.error);
   }
-}, { deep: true });
+}, { deep: true, immediate: true });
 </script>

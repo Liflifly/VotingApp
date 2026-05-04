@@ -79,10 +79,12 @@
 
         <!-- Submit Button -->
         <div v-if="!user?.has_voted" class="mt-10 mb-4 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700 flex justify-center">
+          <!-- UI-04 FIX: Tambahkan loading indicator saat form.processing -->
           <button type="submit" :disabled="!form.candidate_id || form.processing"
             class="neo-btn bg-neo-yellow text-neo-black py-3 md:py-4 px-8 md:px-12 text-sm md:text-lg shadow-neo disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0">
-            <span class="material-symbols-outlined text-xl md:text-2xl">verified</span>
-            KIRIM SUARA &#8594;
+            <span v-if="form.processing" class="material-symbols-outlined text-xl md:text-2xl animate-spin">autorenew</span>
+            <span v-else class="material-symbols-outlined text-xl md:text-2xl">verified</span>
+            {{ form.processing ? 'MENGIRIM SUARA...' : 'KIRIM SUARA \u2192' }}
           </button>
         </div>
       </form>

@@ -40,23 +40,85 @@
           <textarea v-model="form.program" class="neo-input h-20 resize-none"></textarea>
         </div>
         <div>
-          <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">FOTO BARU (opsional)</label>
-          <div class="border-neo border-dashed border-neo-black p-4 md:p-6 text-center bg-gray-50 cursor-pointer hover:bg-neo-yellow/10 transition-colors relative overflow-hidden" @click="$refs.photoInput.click()">
+          <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">FOTO (opsional)</label>
+          <div
+            class="border-neo border-dashed border-neo-black p-4 md:p-6 text-center bg-gray-50 cursor-pointer hover:bg-neo-yellow/10 transition-colors relative overflow-hidden"
+            @click="$refs.photoInput.click()"
+          >
             <div class="absolute top-0 right-0 w-8 h-8 bg-neo-blue/10 border-l border-b border-neo-blue/20"></div>
-            <span class="material-symbols-outlined text-2xl md:text-3xl text-neo-grey mb-2">upload_file</span>
-            <p class="font-heading text-[10px] md:text-xs font-bold uppercase text-neo-grey">{{ form.photo ? form.photo.name : 'Ganti foto (opsional)' }}</p>
-            <input ref="photoInput" type="file" class="hidden" accept="image/*" @change="form.photo = $event.target.files[0]" />
+
+            <!-- Preview: newly cropped photo -->
+            <template v-if="photoPreview">
+              <img :src="photoPreview" class="w-24 h-24 mx-auto mb-2 border-2 border-neo-black object-cover" />
+              <p class="font-heading text-[10px] md:text-xs font-bold uppercase text-green-600">✓ Foto baru sudah di-crop</p>
+            </template>
+            <!-- Preview: existing photo from server -->
+            <template v-else-if="candidate.photo">
+              <img :src="`/storage/${candidate.photo}`" class="w-24 h-24 mx-auto mb-2 border-2 border-neo-black object-cover" />
+              <p class="font-heading text-[10px] md:text-xs font-bold uppercase text-neo-grey">Klik untuk ganti foto</p>
+            </template>
+            <!-- No photo -->
+            <template v-else>
+              <span class="material-symbols-outlined text-2xl md:text-3xl text-neo-grey mb-2">upload_file</span>
+              <p class="font-heading text-[10px] md:text-xs font-bold uppercase text-neo-grey">Ganti foto (opsional)</p>
+            </template>
+
+            <input ref="photoInput" type="file" class="hidden" accept="image/*" @change="onPhotoSelect" />
           </div>
         </div>
         <button type="submit" :disabled="form.processing" class="neo-btn-primary w-full py-3 md:py-4 text-sm md:text-base">UPDATE KANDIDAT →</button>
       </form>
     </div>
+
+    <!-- Crop Modal -->
+    <NeoCropper
+      v-model:show="showCropper"
+      :image-src="cropImageSrc"
+      crop-shape="square"
+      @crop="onCropped"
+    />
   </AuthenticatedLayout>
 </template>
+
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import NeoCropper from '@/Components/NeoCropper.vue';
 import { Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
 const props = defineProps({ election: Object, candidate: Object });
-const form = useForm({ name: props.candidate.name, order_number: props.candidate.order_number, class: props.candidate.class, vision: props.candidate.vision, mission: props.candidate.mission, program: props.candidate.program, photo: null, _method: 'put' });
+const form = useForm({
+  name: props.candidate.name,
+  order_number: props.candidate.order_number,
+  class: props.candidate.class,
+  vision: props.candidate.vision,
+  mission: props.candidate.mission,
+  program: props.candidate.program,
+  photo: null,
+  _method: 'put',
+});
+
+const showCropper   = ref(false);
+const cropImageSrc  = ref(null);
+const photoPreview  = ref(null);
+
+const onPhotoSelect = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  e.target.value = '';
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    cropImageSrc.value = ev.target.result;
+    showCropper.value  = true;
+  };
+  reader.readAsDataURL(file);
+};
+
+const onCropped = (file) => {
+  form.photo = file;
+  photoPreview.value = URL.createObjectURL(file);
+};
+
 const submit = () => form.post(route('admin.candidates.update', { election: props.election.id, candidate: props.candidate.id }));
 </script>

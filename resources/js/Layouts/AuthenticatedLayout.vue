@@ -45,7 +45,7 @@
         <div class="absolute bottom-0 right-0 w-6 h-6 bg-neo-blue border-l-2 border-t-2 border-neo-black dark:border-white"></div>
         <div class="flex items-center gap-3 relative z-10">
           <div class="w-9 h-9 bg-neo-blue border-2 border-neo-black dark:border-white flex items-center justify-center shrink-0 overflow-hidden">
-            <img v-if="user.avatar" :src="`/storage/${user.avatar}`" :alt="user.name" class="w-full h-full object-cover">
+            <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="w-full h-full object-cover">
             <span v-else class="material-symbols-outlined text-white text-lg">person</span>
           </div>
           <div class="flex-1 min-w-0">
@@ -65,7 +65,8 @@
       <!-- User avatar (collapsed) -->
       <div v-if="user && sidebarCollapsed" class="mx-2 mt-3 flex justify-center shrink-0">
         <div class="w-9 h-9 bg-neo-blue border-2 border-neo-black dark:border-white flex items-center justify-center overflow-hidden">
-          <img v-if="user.avatar" :src="`/storage/${user.avatar}`" :alt="user.name" class="w-full h-full object-cover">
+          <!-- UI-02 FIX: Gunakan user.avatar langsung (sudah full URL dari HandleInertiaRequests) -->
+          <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="w-full h-full object-cover">
           <span v-else class="material-symbols-outlined text-white text-lg">person</span>
         </div>
       </div>
@@ -109,7 +110,7 @@
           <Link :href="route('logout')" method="post" as="button"
             :class="['neo-btn-danger border-neo-black dark:border-white w-full text-xs py-2.5', sidebarCollapsed ? 'px-0 justify-center' : '']">
             <span class="material-symbols-outlined text-base">logout</span>
-            <span v-if="!sidebarCollapsed">LOG OUT</span>
+            <span v-if="!sidebarCollapsed"></span>
           </Link>
           <div v-if="!sidebarCollapsed" class="text-center mt-2">
             <span class="font-heading text-[8px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-[0.2em]">KOSGORO&#8482; SYSTEM V1.0</span>

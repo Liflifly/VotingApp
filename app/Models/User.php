@@ -14,6 +14,8 @@ class User extends Authenticatable
 
     /**
      * The attributes that are mass assignable.
+     * SECURITY: role, has_voted, voted_election_id are intentionally excluded
+     * to prevent mass assignment privilege escalation attacks.
      *
      * @var list<string>
      */
@@ -22,9 +24,6 @@ class User extends Authenticatable
         'email',
         'password',
         'nis',
-        'has_voted',
-        'role',
-        'voted_election_id',
         'avatar',
     ];
 
@@ -47,17 +46,27 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
 
+    /**
+     * BUG-02 FIX: Query langsung ke tabel votes sebagai source of truth,
+     * bukan membandingkan kolom voted_election_id yang bisa out-of-sync.
+     */
     public function hasVotedInElection(Election $election): bool
     {
-        return $this->voted_election_id === $election->id;
+        return $this->votes()
+            ->where('election_id', $election->id)
+            ->exists();
     }
 
-    public function vote()
+    /**
+     * BUG-02 FIX: Diganti ke hasMany karena satu user bisa vote
+     * di banyak election (berbeda periode).
+     */
+    public function votes()
     {
-        return $this->hasOne(Vote::class);
+        return $this->hasMany(Vote::class);
     }
 }

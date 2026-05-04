@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Candidate;
 use App\Models\Election;
 use App\Models\Vote;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +19,7 @@ class VoteController extends Controller
 
         if (! $activeElection) {
             return \Inertia\Inertia::render('Vote/Index', [
-                'user' => $user,
+                'user'           => $user,
                 'activeElection' => null,
             ]);
         }
@@ -31,15 +32,17 @@ class VoteController extends Controller
         $totalVotes = Vote::where('election_id', $activeElection->id)->count();
 
         return \Inertia\Inertia::render('Vote/Index', [
-            'candidates' => $candidates,
-            'user' => $user,
+            'candidates'     => $candidates,
+            'user'           => $user,
             'activeElection' => $activeElection,
-            'totalVotes' => $totalVotes,
+            'totalVotes'     => $totalVotes,
         ]);
     }
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+
         return DB::transaction(function () use ($request, $user) {
             $data = $request->validate([
                 'candidate_id' => ['required', 'exists:candidates,id'],
@@ -55,7 +58,7 @@ class VoteController extends Controller
                 return back()->with('error', 'Maaf, Anda tidak dapat melakukan vote karena bukan akun siswa.');
             }
 
-            // Fresh check inside transaction
+            // BUG-02 FIX: Fresh check dari DB + query ke tabel votes (source of truth)
             $user->refresh();
             if ($user->hasVotedInElection($activeElection)) {
                 return back()->with('error', 'Ups! Kamu sudah nyoblos, masa mau dua kali?');
@@ -70,15 +73,23 @@ class VoteController extends Controller
                 return back()->with('error', 'Eh, kandidat ini nyasar atau bukan dari periode ini.');
             }
 
-            Vote::create([
-                'user_id' => $user->id,
-                'candidate_id' => $data['candidate_id'],
-                'election_id' => $activeElection->id,
-            ]);
-            $user->update([
-                'has_voted' => true,
-                'voted_election_id' => $activeElection->id,
-            ]);
+            try {
+                // BUG-01 FIX: Tangkap UniqueConstraintViolationException dari race condition.
+                // DB unique constraint (user_id, election_id) berfungsi sebagai safety net terakhir.
+                Vote::create([
+                    'user_id'      => $user->id,
+                    'candidate_id' => $data['candidate_id'],
+                    'election_id'  => $activeElection->id,
+                ]);
+
+                // SEC-01 FIX: Update langsung via explicit assignment, bukan via fillable
+                $user->has_voted        = true;
+                $user->voted_election_id = $activeElection->id;
+                $user->save();
+            } catch (UniqueConstraintViolationException $e) {
+                // Race condition tertangkap — user berhasil submit dua request serentak
+                return back()->with('error', 'Ups! Suaramu sudah tercatat. Tidak bisa memilih dua kali.');
+            }
 
             return redirect()->route('results.index')->with('success', 'Keren! Suaramu udah aman tercatat di kotak suara.');
         });
@@ -99,7 +110,7 @@ class VoteController extends Controller
             return \Inertia\Inertia::render('Results/Index', [
                 'candidates' => collect(),
                 'totalVotes' => 0,
-                'election' => null,
+                'election'   => null,
             ]);
         }
 
@@ -113,7 +124,7 @@ class VoteController extends Controller
         return \Inertia\Inertia::render('Results/Index', [
             'candidates' => $candidates,
             'totalVotes' => $totalVotes,
-            'election' => $election,
+            'election'   => $election,
         ]);
     }
 }

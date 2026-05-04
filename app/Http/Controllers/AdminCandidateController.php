@@ -26,14 +26,17 @@ class AdminCandidateController extends Controller
         if ($election->status === 'active') {
             abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
         }
-        $request->validate([
-            'name' => 'required|string|max:255',
+
+        // SEC-03 FIX: Gunakan return value dari validate() sebagai sumber data
+        // SEC-04 FIX: Hapus 'gif', tambahkan validasi dimensions minimum
+        $validated = $request->validate([
+            'name'         => 'required|string|max:255',
             'order_number' => 'nullable|integer|min:1',
-            'class' => 'required|string|max:255',
-            'vision' => 'required|string',
-            'mission' => 'required|string',
-            'program' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'class'        => 'required|string|max:255',
+            'vision'       => 'required|string',
+            'mission'      => 'required|string',
+            'program'      => 'nullable|string',
+            'photo'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048|dimensions:min_width=100,min_height=100',
         ]);
 
         $photoPath = null;
@@ -44,14 +47,15 @@ class AdminCandidateController extends Controller
         $nextOrder = $election->candidates()->max('order_number');
         $nextOrder = $nextOrder ? $nextOrder + 1 : 1;
 
+        // SEC-03 FIX: Data diambil dari $validated, bukan langsung dari $request->property
         $election->candidates()->create([
-            'name' => $request->name,
-            'order_number' => $request->order_number ?? $nextOrder,
-            'class' => $request->class,
-            'vision' => $request->vision,
-            'mission' => $request->mission,
-            'program' => $request->program,
-            'photo' => $photoPath,
+            'name'         => $validated['name'],
+            'order_number' => $validated['order_number'] ?? $nextOrder,
+            'class'        => $validated['class'],
+            'vision'       => $validated['vision'],
+            'mission'      => $validated['mission'],
+            'program'      => $validated['program'] ?? null,
+            'photo'        => $photoPath,
         ]);
 
         return redirect()->route('admin.candidates.index', $election)->with('success', 'Kandidat berhasil bergabung dalam pesta demokrasi!');
@@ -67,23 +71,26 @@ class AdminCandidateController extends Controller
         if ($election->status === 'active') {
             abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
         }
-        $request->validate([
-            'name' => 'required|string|max:255',
+
+        // SEC-03 FIX: Gunakan return value dari validate()
+        // SEC-04 FIX: Hapus 'gif', tambahkan validasi dimensions minimum
+        $validated = $request->validate([
+            'name'         => 'required|string|max:255',
             'order_number' => 'nullable|integer|min:1',
-            'class' => 'required|string|max:255',
-            'vision' => 'required|string',
-            'mission' => 'required|string',
-            'program' => 'nullable|string',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'class'        => 'required|string|max:255',
+            'vision'       => 'required|string',
+            'mission'      => 'required|string',
+            'program'      => 'nullable|string',
+            'photo'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048|dimensions:min_width=100,min_height=100',
         ]);
 
         $data = [
-            'name' => $request->name,
-            'order_number' => $request->order_number ?: $candidate->order_number,
-            'class' => $request->class,
-            'vision' => $request->vision,
-            'mission' => $request->mission,
-            'program' => $request->program,
+            'name'         => $validated['name'],
+            'order_number' => $validated['order_number'] ?: $candidate->order_number,
+            'class'        => $validated['class'],
+            'vision'       => $validated['vision'],
+            'mission'      => $validated['mission'],
+            'program'      => $validated['program'] ?? null,
         ];
 
         if ($request->hasFile('photo')) {

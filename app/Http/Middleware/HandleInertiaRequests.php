@@ -23,7 +23,10 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->name,
                     'email' => $request->user()->email,
-                    'avatar' => $request->user()->avatar ? asset('storage/'.$request->user()->avatar) : null,
+                    'nis' => $request->user()->nis,
+                    'avatar' => $request->user()->avatar
+                        ? '/storage/' . $request->user()->avatar
+                        : null,
                     'role' => $request->user()->role,
                     'has_voted' => $request->user()->has_voted ?? false,
                 ] : null,

@@ -19,14 +19,13 @@ class ProfileController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('Profile/Edit', [
-            'user' => $request->user(),
             'mustVerifyEmail' => false,
-            'status' => session('status'),
+            'status'          => session('status'),
         ]);
     }
 
     /**
-     * Update the user's profile information.
+     * Update the user's profile information (name & email).
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
@@ -38,30 +37,39 @@ class ProfileController extends Controller
 
         $request->user()->save();
 
-        return Redirect::route('profile.edit')->with(['status' => 'profile-updated']);
+        return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
     /**
-     * Update the user's avatar.
+     * Update the user's avatar photo.
+     *
+     * Receives a cropped JPEG blob sent via FormData from the NeoCropper modal.
+     * Route: POST /profile/avatar → profile.avatar.update
+     *
+     * Saves to storage/app/public/avatars/ and updates the `avatar`
+     * column in the users table.
      */
     public function updateAvatar(Request $request): RedirectResponse
     {
         $request->validate([
-            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'image' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
         ]);
 
         $user = $request->user();
-        
-        $fileName = 'avatars/'.$user->id.'_'.time().'.'.$request->file('image')->extension();
 
-        // Delete old avatar if exists
-        if ($user->avatar) {
+        // Delete old avatar from disk if one exists
+        if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        $path = $request->file('image')->storeAs('avatars', basename($fileName), 'public');
+        // Store the new file → avatars/{userId}_{timestamp}.{ext}
+        $extension = $request->file('image')->extension() ?: 'jpg';
+        $filename  = $user->id . '_' . time() . '.' . $extension;
+        $path      = $request->file('image')->storeAs('avatars', $filename, 'public');
 
-        $user->update(['avatar' => $path]);
+        // Persist to DB — column is `avatar`, NOT `photo`
+        $user->avatar = $path;
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'avatar-updated');
     }

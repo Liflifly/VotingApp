@@ -1,4 +1,4 @@
-/<template>
+<template>
   <AuthenticatedLayout title="KELOLA ADMIN">
     <!-- Header -->
     <div class="neo-page-header bg-white shadow-neo mb-6 md:mb-8">
@@ -15,7 +15,7 @@
     </div>
 
     <div class="space-y-2 md:space-y-3">
-      <div v-for="u in users" :key="u.id" class="neo-card p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-hidden">
+      <div v-for="u in users" :key="u.id" class="neo-card p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative overflow-visible">
         <div class="absolute top-0 right-0 w-6 h-6 border-l border-b" :class="u.role === 'super_admin' ? 'bg-neo-red/10 border-neo-red/20' : u.role === 'admin' ? 'bg-neo-blue/10 border-neo-blue/20' : 'bg-gray-100 border-gray-200'"></div>
         
         <div class="flex items-center gap-3">
@@ -31,11 +31,23 @@
           <span :class="['neo-badge text-[9px] md:text-xs', u.role === 'super_admin' ? 'bg-neo-red text-white' : u.role === 'admin' ? 'bg-neo-blue text-white' : 'bg-gray-200']">
             {{ u.role?.toUpperCase() }}
           </span>
-          <select v-if="u.role !== 'super_admin'" @change="updateRole(u, $event.target.value)" :value="u.role"
-            class="neo-input py-1 md:py-1.5 px-2 md:px-3 text-[10px] md:text-xs w-auto">
-            <option value="user">USER</option>
-            <option value="admin">ADMIN</option>
-          </select>
+          
+          <!-- Custom Neo-Brutalist Dropdown -->
+          <div v-if="u.role !== 'super_admin'" class="relative">
+            <button @click="toggleDropdown(u.id)" class="neo-input flex items-center justify-between gap-2 py-1 md:py-1.5 px-2 md:px-3 text-[10px] md:text-xs w-28 bg-white cursor-pointer hover:bg-gray-50 focus:outline-none transition-colors">
+              <span class="font-heading font-bold tracking-wider">{{ u.role.toUpperCase() }}</span>
+              <span class="material-symbols-outlined text-[16px]">expand_more</span>
+            </button>
+            
+            <!-- Overlay for outside click -->
+            <div v-if="openDropdown === u.id" @click="closeDropdown" class="fixed inset-0 z-40"></div>
+            
+            <!-- Dropdown Menu -->
+            <div v-show="openDropdown === u.id" class="absolute top-full right-0 mt-1 w-full bg-white border-2 border-neo-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 flex flex-col">
+              <button @click="updateRole(u, 'user')" class="px-3 py-2 text-left font-heading text-xs font-bold hover:bg-neo-blue hover:text-white transition-colors border-b-2 border-neo-black cursor-pointer">USER</button>
+              <button @click="updateRole(u, 'admin')" class="px-3 py-2 text-left font-heading text-xs font-bold hover:bg-neo-blue hover:text-white transition-colors cursor-pointer">ADMIN</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -44,8 +56,22 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { router } from '@inertiajs/vue3';
+import { ref } from 'vue';
+
 defineProps({ users: Array });
+
+const openDropdown = ref(null);
+
+const toggleDropdown = (id) => {
+  openDropdown.value = openDropdown.value === id ? null : id;
+};
+
+const closeDropdown = () => {
+  openDropdown.value = null;
+};
+
 const updateRole = (user, newRole) => {
+  closeDropdown();
   router.put(route('admin.users.updateRole', user.id), { role: newRole });
 };
 </script>

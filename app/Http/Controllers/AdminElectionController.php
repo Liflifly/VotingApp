@@ -28,10 +28,10 @@ class AdminElectionController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'     => 'required|string|max:255',
             'starts_at' => 'required|date',
-            'ends_at' => 'required|date|after:starts_at',
-            'notes' => 'nullable|string',
+            'ends_at'   => 'required|date|after:starts_at',
+            'notes'     => 'nullable|string',
         ]);
 
         Election::create($validated);
@@ -53,7 +53,8 @@ class AdminElectionController extends Controller
         if (! $election) {
             $election = Election::query()->latest('id')->first();
 
-            return \Inertia\Inertia::render('Admin/Election/Edit', compact('election'));
+            // BUG-04 FIX: Typo path sebelumnya 'Admin/Election/Edit' (tanpa 's')
+            return \Inertia\Inertia::render('Admin/Elections/Edit', compact('election'));
         }
 
         if ($election->status !== 'draft') {
@@ -72,9 +73,9 @@ class AdminElectionController extends Controller
         // Backward compatibility: route lama tanpa election ID
         if (! $election) {
             $data = $request->validate([
-                'name' => ['nullable', 'string', 'max:255'],
+                'name'     => ['nullable', 'string', 'max:255'],
                 'starts_at' => ['nullable', 'date'],
-                'ends_at' => ['nullable', 'date', 'after:starts_at'],
+                'ends_at'   => ['nullable', 'date', 'after:starts_at'],
             ]);
 
             if (empty($data['name'])) {
@@ -93,10 +94,10 @@ class AdminElectionController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name'     => 'required|string|max:255',
             'starts_at' => 'required|date',
-            'ends_at' => 'required|date|after:starts_at',
-            'notes' => 'nullable|string',
+            'ends_at'   => 'required|date|after:starts_at',
+            'notes'     => 'nullable|string',
         ]);
 
         if ($election->status !== 'draft') {
@@ -119,7 +120,9 @@ class AdminElectionController extends Controller
         DB::transaction(function () use ($election) {
             Election::where('id', '!=', $election->id)->update(['status' => 'ended']);
             $election->update(['status' => 'active']);
-            User::query()->update(['has_voted' => false, 'voted_election_id' => null]);
+
+            // BUG-03 FIX: Hanya reset user dengan role 'user', bukan admin/super_admin.
+            User::where('role', 'user')->update(['has_voted' => false, 'voted_election_id' => null]);
         });
 
         return redirect()->route('admin.elections.index')
@@ -130,7 +133,7 @@ class AdminElectionController extends Controller
     {
         DB::transaction(function () use ($election) {
             $election->update([
-                'status' => 'ended',
+                'status'       => 'ended',
                 'total_voters' => User::where('role', 'user')->count(),
             ]);
         });
