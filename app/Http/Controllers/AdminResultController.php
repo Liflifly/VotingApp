@@ -23,15 +23,15 @@ class AdminResultController extends Controller
         $selectedElection = Election::active()->first()
             ?? Election::where('status', 'ended')->latest()->first();
 
-        $results    = collect();
+        $results = collect();
         $totalVotes = 0;
         $totalVoters = User::where('role', 'user')->count();
 
         if ($selectedElection) {
             $results = Candidate::where('election_id', $selectedElection->id)
-                                 ->withCount('votes')
-                                 ->orderByDesc('votes_count')
-                                 ->get();
+                ->withCount('votes')
+                ->orderByDesc('votes_count')
+                ->get();
 
             $totalVotes = Vote::where('election_id', $selectedElection->id)->count();
         }

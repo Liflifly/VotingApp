@@ -27,7 +27,7 @@
         <div class="neo-stat-label">TOTAL PEMILIH</div>
       </div>
       <div class="neo-stat-card">
-        <div class="neo-stat-value" :class="turnout >= 50 ? 'text-neo-blue' : 'text-neo-red'">{{ turnout }}%</div>
+        <div class="neo-stat-value" :class="turnoutNumber >= 50 ? 'text-neo-blue' : 'text-neo-red'">{{ turnout }}%</div>
         <div class="neo-stat-label">PARTISIPASI</div>
       </div>
     </div>
@@ -75,6 +75,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { computed } from 'vue';
 const props = defineProps({ results: Array, totalVoters: Number, totalVotes: Number, elections: Array, selectedElection: Object });
 const sortedResults = computed(() => [...(props.results || [])].sort((a, b) => b.votes_count - a.votes_count));
-const turnout = computed(() => props.totalVoters ? ((props.totalVotes / props.totalVoters) * 100).toFixed(1) : 0);
+const turnoutNumber = computed(() => props.totalVoters ? (props.totalVotes / props.totalVoters) * 100 : 0);
+const turnout = computed(() => turnoutNumber.value.toFixed(1));
 const getPercentage = (v) => props.totalVotes ? ((v / props.totalVotes) * 100).toFixed(1) : 0;
 </script>

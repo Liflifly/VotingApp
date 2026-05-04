@@ -12,6 +12,7 @@ class AdminCandidateController extends Controller
     public function index(Election $election)
     {
         $candidates = $election->candidates()->orderBy('order_number')->get();
+
         return \Inertia\Inertia::render('Admin/Candidates/Index', compact('election', 'candidates'));
     }
 
@@ -22,6 +23,9 @@ class AdminCandidateController extends Controller
 
     public function store(Request $request, Election $election)
     {
+        if ($election->status === 'active') {
+            abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'order_number' => 'nullable|integer|min:1',
@@ -60,6 +64,9 @@ class AdminCandidateController extends Controller
 
     public function update(Request $request, Election $election, Candidate $candidate)
     {
+        if ($election->status === 'active') {
+            abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
+        }
         $request->validate([
             'name' => 'required|string|max:255',
             'order_number' => 'nullable|integer|min:1',
@@ -93,6 +100,9 @@ class AdminCandidateController extends Controller
 
     public function destroy(Election $election, Candidate $candidate)
     {
+        if ($election->status === 'active') {
+            abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
+        }
         if ($candidate->photo) {
             Storage::disk('public')->delete($candidate->photo);
         }

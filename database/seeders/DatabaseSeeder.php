@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\Candidate;
-use App\Models\Vote;
 use App\Models\Election;
-use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Models\Vote;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -80,7 +80,7 @@ class DatabaseSeeder extends Seeder
 
         if ($u1 && isset($createdCandidates[0])) {
             Vote::create([
-                'user_id' => $u1->id, 
+                'user_id' => $u1->id,
                 'candidate_id' => $createdCandidates[0]->id,
                 'election_id' => $election->id,
             ]);
@@ -91,7 +91,7 @@ class DatabaseSeeder extends Seeder
         }
         if ($u2 && isset($createdCandidates[1])) {
             Vote::create([
-                'user_id' => $u2->id, 
+                'user_id' => $u2->id,
                 'candidate_id' => $createdCandidates[1]->id,
                 'election_id' => $election->id,
             ]);
@@ -102,7 +102,7 @@ class DatabaseSeeder extends Seeder
         }
         if ($u3 && isset($createdCandidates[0])) {
             Vote::create([
-                'user_id' => $u3->id, 
+                'user_id' => $u3->id,
                 'candidate_id' => $createdCandidates[0]->id,
                 'election_id' => $election->id,
             ]);

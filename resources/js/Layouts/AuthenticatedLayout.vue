@@ -44,8 +44,9 @@
       <div v-if="user && !sidebarCollapsed" class="mx-3 mt-3 p-3 border-neo border-neo-black dark:border-white bg-neo-surface dark:bg-neo-dark-surface relative overflow-hidden shrink-0">
         <div class="absolute bottom-0 right-0 w-6 h-6 bg-neo-blue border-l-2 border-t-2 border-neo-black dark:border-white"></div>
         <div class="flex items-center gap-3 relative z-10">
-          <div class="w-9 h-9 bg-neo-blue border-2 border-neo-black dark:border-white flex items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-white text-lg">person</span>
+          <div class="w-9 h-9 bg-neo-blue border-2 border-neo-black dark:border-white flex items-center justify-center shrink-0 overflow-hidden">
+            <img v-if="user.avatar" :src="`/storage/${user.avatar}`" :alt="user.name" class="w-full h-full object-cover">
+            <span v-else class="material-symbols-outlined text-white text-lg">person</span>
           </div>
           <div class="flex-1 min-w-0">
             <div class="font-heading text-xs font-bold truncate uppercase dark:text-white">{{ user.name }}</div>
@@ -63,8 +64,9 @@
 
       <!-- User avatar (collapsed) -->
       <div v-if="user && sidebarCollapsed" class="mx-2 mt-3 flex justify-center shrink-0">
-        <div class="w-9 h-9 bg-neo-blue border-2 border-neo-black dark:border-white flex items-center justify-center">
-          <span class="material-symbols-outlined text-white text-lg">person</span>
+        <div class="w-9 h-9 bg-neo-blue border-2 border-neo-black dark:border-white flex items-center justify-center overflow-hidden">
+          <img v-if="user.avatar" :src="`/storage/${user.avatar}`" :alt="user.name" class="w-full h-full object-cover">
+          <span v-else class="material-symbols-outlined text-white text-lg">person</span>
         </div>
       </div>
 
@@ -199,12 +201,21 @@ import { useDarkMode } from '@/Composables/useDarkMode.js';
 defineProps({ title: String });
 
 const sidebarOpen = ref(false);
-const sidebarCollapsed = ref(localStorage.getItem('sidebar-collapsed') === '1');
+const sidebarCollapsed = ref(false);
+try {
+  sidebarCollapsed.value = localStorage.getItem('sidebar-collapsed') === '1';
+} catch (e) {
+  // Ignore
+}
 const { isDark, toggle: toggleDark } = useDarkMode();
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
-  localStorage.setItem('sidebar-collapsed', sidebarCollapsed.value ? '1' : '0');
+  try {
+    localStorage.setItem('sidebar-collapsed', sidebarCollapsed.value ? '1' : '0');
+  } catch (e) {
+    // Ignore
+  }
 };
 
 router.on('navigate', () => { sidebarOpen.value = false; });

@@ -45,8 +45,8 @@
             <Link :href="route('admin.elections.show', election.id)" class="neo-btn-secondary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">DETAIL</Link>
             <Link v-if="election.status === 'draft'" :href="route('admin.elections.edit', election.id)" class="neo-btn-secondary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">EDIT</Link>
             <Link :href="route('admin.candidates.index', election.id)" class="neo-btn-secondary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">KANDIDAT</Link>
-            <Link v-if="election.status === 'draft'" :href="route('admin.elections.activate', election.id)" method="post" as="button" class="neo-btn-primary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">AKTIFKAN</Link>
-            <Link v-if="election.status === 'active'" :href="route('admin.elections.end', election.id)" method="post" as="button" class="neo-btn-danger text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">AKHIRI</Link>
+            <button v-if="election.status === 'draft'" @click="confirmAction(route('admin.elections.activate', election.id), 'Aktifkan Periode?', 'Periode ini akan menjadi satu-satunya yang aktif.', 'Ya, Aktifkan!')" class="neo-btn-primary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">AKTIFKAN</button>
+            <button v-if="election.status === 'active'" @click="confirmAction(route('admin.elections.end', election.id), 'Akhiri Periode?', 'Tindakan ini tidak dapat dibatalkan.', 'Ya, Akhiri!')" class="neo-btn-danger text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">AKHIRI</button>
           </div>
         </div>
       </div>
@@ -56,9 +56,26 @@
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
 
 defineProps({ elections: Array });
+
+const confirmAction = (url, title, text, confirmButtonText) => {
+  Swal.fire({
+    title,
+    text,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText
+  }).then((result) => {
+    if (result.isConfirmed) {
+      router.post(url);
+    }
+  });
+};
 
 const statusBadgeClass = (status) => {
   const base = 'neo-badge';

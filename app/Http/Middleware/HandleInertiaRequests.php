@@ -20,18 +20,18 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user() ? [
-                    'id'        => $request->user()->id,
-                    'name'      => $request->user()->name,
-                    'email'     => $request->user()->email,
-                    'avatar'    => $request->user()->avatar ? asset('storage/' . $request->user()->avatar) : null,
-                    'role'      => $request->user()->role,
+                    'id' => $request->user()->id,
+                    'name' => $request->user()->name,
+                    'email' => $request->user()->email,
+                    'avatar' => $request->user()->avatar ? asset('storage/'.$request->user()->avatar) : null,
+                    'role' => $request->user()->role,
                     'has_voted' => $request->user()->has_voted ?? false,
                 ] : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
-                'error'   => fn () => $request->session()->get('error'),
-                'status'  => fn () => $request->session()->get('status'),
+                'error' => fn () => $request->session()->get('error'),
+                'status' => fn () => $request->session()->get('status'),
             ],
         ];
     }

@@ -58,6 +58,7 @@ import { ref, watch, onMounted } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 const toasts = ref([]);
+const lastToast = ref({ type: null, message: null, timestamp: 0 });
 let nextId = 1;
 
 const removeToast = (id) => {
@@ -66,6 +67,14 @@ const removeToast = (id) => {
 
 const addToast = (type, message) => {
   if (!message) return;
+  
+  // Dedup logic: ignore if same message within 1 second
+  const now = Date.now();
+  if (type === lastToast.value.type && message === lastToast.value.message && (now - lastToast.value.timestamp < 1000)) {
+      return;
+  }
+  
+  lastToast.value = { type, message, timestamp: now };
   
   const id = nextId++;
   toasts.value.push({ id, type, message });
@@ -81,11 +90,9 @@ const page = usePage();
 watch(() => page.props.flash, (flash) => {
   if (flash?.success) {
     addToast('success', flash.success);
-    // Clear flash manually to prevent re-triggering if needed, 
-    // though Inertia usually handles this per request.
   }
   if (flash?.error) {
     addToast('error', flash.error);
   }
-}, { deep: true, immediate: true });
+}, { deep: true });
 </script>

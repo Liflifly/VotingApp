@@ -23,7 +23,7 @@
           <!-- Avatar with Upload Overlay -->
           <div class="relative group w-32 h-32 mx-auto mb-4">
             <div class="w-full h-full bg-neo-blue border-neo border-neo-black dark:border-white shadow-neo dark:shadow-neo-white flex items-center justify-center overflow-hidden">
-              <img v-if="user.avatar" :src="user.avatar" class="w-full h-full object-cover" />
+              <img v-if="user.avatar" :src="`/storage/${user.avatar}`" class="w-full h-full object-cover" />
               <span v-else class="material-symbols-outlined text-white text-6xl">person</span>
             </div>
             
@@ -141,45 +141,49 @@
     </div>
 
     <!-- CROP MODAL -->
-    <div v-if="showCropModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-neo-black/80 backdrop-blur-sm">
-      <div class="neo-card w-full max-w-lg bg-white dark:bg-neo-dark-card border-neo border-neo-black dark:border-white shadow-neo-white">
-        <div class="p-4 border-b-neo border-neo-black dark:border-white flex justify-between items-center bg-neo-blue text-white">
-          <h3 class="font-heading font-black text-sm uppercase tracking-wider">SESUAIKAN FOTO PROFIL</h3>
-          <button @click="cancelCrop" class="hover:rotate-90 transition-transform">
-            <span class="material-symbols-outlined">close</span>
-          </button>
-        </div>
-        <div class="p-6 bg-neo-surface dark:bg-neo-dark-surface">
-          <div class="w-full aspect-square border-neo border-neo-black dark:border-white overflow-hidden bg-neo-black">
-            <img ref="imageToCrop" :src="imageSrc" class="max-w-full block" />
-          </div>
-        </div>
-        <div class="p-4 border-t-neo border-neo-black dark:border-white flex justify-end gap-3 bg-white dark:bg-neo-dark-card">
-          <button @click="cancelCrop" class="neo-btn-secondary py-2 text-xs">BATAL</button>
-          <button @click="cropImage" class="neo-btn-primary py-2 text-xs">POTONG & SIMPAN</button>
-        </div>
-      </div>
-    </div>
+    <Teleport to="body">
+      <div v-if="showCropModal" class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/95 p-4">
+        <!-- Close (X) -->
+        <button @click="cancelCrop" class="absolute top-6 right-6 text-white hover:text-gray-300">
+          <span class="material-symbols-outlined text-3xl">close</span>
+        </button>
 
+        <!-- Crop Area -->
+        <div class="w-full max-w-sm aspect-square relative rounded-full overflow-hidden border-2 border-white/20">
+          <img ref="imageToCrop" :src="imageSrc" class="max-w-full block" />
+        </div>
+
+        <!-- Zoom Slider -->
+        <div class="w-full max-w-sm mt-8 px-6">
+          <input type="range" min="0.1" max="3" step="0.1" v-model="zoomValue" @input="updateZoom" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500">
+        </div>
+
+        <!-- Confirm (Checkmark) -->
+        <button @click="cropImage" class="mt-8 w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-white shadow-lg hover:scale-105 transition-transform">
+          <span class="material-symbols-outlined text-3xl">check</span>
+        </button>
+      </div>
+    </Teleport>
   </AuthenticatedLayout>
 </template>
 
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useForm, usePage, router } from '@inertiajs/vue3';
-import { ref, nextTick } from 'vue';
+import { ref, nextTick, computed } from 'vue';
 import Cropper from 'cropperjs';
-import 'cropperjs/dist/cropper.css';
+
+const page = usePage();
+const user = computed(() => page.props.auth.user);
 
 const props = defineProps({
-  user: Object,
   mustVerifyEmail: Boolean,
   status: String,
 });
 
 const profileForm = useForm({
-  name: props.user.name,
-  email: props.user.email,
+  name: user.value.name,
+  email: user.value.email,
 });
 
 const passwordForm = useForm({
@@ -203,6 +207,7 @@ const updatePassword = () => {
 const showCropModal = ref(false);
 const imageSrc = ref(null);
 const imageToCrop = ref(null);
+const zoomValue = ref(1);
 let cropper = null;
 
 const onFileChange = (e) => {
@@ -222,19 +227,40 @@ const onFileChange = (e) => {
 
 const initCropper = () => {
   if (cropper) cropper.destroy();
+  
+  const container = imageToCrop.value.parentElement;
+  
   cropper = new Cropper(imageToCrop.value, {
     aspectRatio: 1,
     viewMode: 1,
     dragMode: 'move',
     autoCropArea: 1,
     restore: false,
-    guides: true,
-    center: true,
+    guides: false,
+    center: false,
     highlight: false,
-    cropBoxMovable: true,
-    cropBoxResizable: true,
+    cropBoxMovable: false,
+    cropBoxResizable: false,
     toggleDragModeOnDblclick: false,
+    background: false,
+    ready() {
+      // Force the crop box to the full size of the container
+      const containerData = this.cropper.getContainerData();
+      this.cropper.setCropBoxData({
+        left: 0,
+        top: 0,
+        width: containerData.width,
+        height: containerData.height
+      });
+    }
   });
+  zoomValue.value = 1;
+};
+
+const updateZoom = () => {
+  if (cropper) {
+    cropper.zoomTo(parseFloat(zoomValue.value));
+  }
 };
 
 const cancelCrop = () => {
@@ -244,19 +270,42 @@ const cancelCrop = () => {
 };
 
 const cropImage = () => {
-  const canvas = cropper.getCroppedCanvas({
+  cropper.getCroppedCanvas({
     width: 400,
     height: 400,
-  });
-
-  const croppedImage = canvas.toDataURL('image/jpeg');
-  
-  router.post(route('profile.avatar.update'), {
-    image: croppedImage
-  }, {
-    onSuccess: () => {
-      showCropModal.value = false;
-    }
-  });
+  }).toBlob((blob) => {
+    const formData = new FormData();
+    formData.append('image', blob, 'avatar.jpg');
+    formData.append('_method', 'PATCH');
+    
+    router.post(route('profile.avatar.update'), formData, {
+      forceFormData: true,
+      onSuccess: () => {
+        showCropModal.value = false;
+      }
+    });
+  }, 'image/jpeg');
 };
 </script>
+
+<style>
+/* Circular Cropper Overrides */
+.cropper-point, .cropper-line { display: none !important; }
+
+.cropper-view-box,
+.cropper-face {
+  border-radius: 50% !important;
+  outline: 0 !important;
+}
+
+.cropper-face {
+  background-color: transparent !important;
+}
+
+/* Base cropper styles */
+.cropper-container { direction: ltr; font-size: 0; line-height: 0; position: relative; touch-action: none; user-select: none; }
+.cropper-container img { display: block; height: 100%; image-orientation: 0deg; max-height: none !important; max-width: none !important; min-height: 0 !important; min-width: 0 !important; width: 100%; }
+.cropper-wrap-box, .cropper-canvas, .cropper-drag-box, .cropper-crop-box, .cropper-modal { bottom: 0; left: 0; position: absolute; right: 0; top: 0; }
+.cropper-view-box { display: block; height: 100%; overflow: hidden; width: 100%; }
+.cropper-modal { background-color: #000; opacity: 0.7; }
+</style>

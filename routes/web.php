@@ -1,13 +1,13 @@
 <?php
 
-use App\Http\Controllers\AdminResultController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\VoteController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\AdminCandidateController;
 use App\Http\Controllers\AdminElectionController;
+use App\Http\Controllers\AdminResultController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\CandidateController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\VoteController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('welcome');
@@ -21,10 +21,10 @@ Route::get('/dashboard', function () {
     $user = auth()->user();
     $activeElection = \App\Models\Election::active()->first();
 
-    if (!$activeElection) {
+    if (! $activeElection) {
         return \Inertia\Inertia::render('Dashboard', [
             'user' => $user,
-            'activeElection' => null
+            'activeElection' => null,
         ]);
     }
 

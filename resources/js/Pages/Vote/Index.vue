@@ -26,7 +26,7 @@
             </h1>
             <p class="font-body text-xs md:text-body-md text-neo-grey">Klik pada kartu kandidat untuk memilih, lalu tekan tombol konfirmasi.</p>
           </div>
-          <div v-if="user.has_voted" class="neo-badge bg-gray-200 text-neo-black">
+          <div v-if="user?.has_voted" class="neo-badge bg-gray-200 text-neo-black">
             <span class="material-symbols-outlined text-sm">check_circle</span>
             SUDAH MEMILIH
           </div>
@@ -39,8 +39,8 @@
 
       <form @submit.prevent="submitVote">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <label v-for="candidate in candidates" :key="candidate.id" class="cursor-pointer block" :class="{ 'pointer-events-none': user.has_voted }">
-            <input type="radio" v-model="form.candidate_id" :value="candidate.id" class="peer sr-only" :disabled="user.has_voted">
+          <label v-for="candidate in candidates" :key="candidate.id" class="cursor-pointer block" :class="{ 'pointer-events-none': user?.has_voted }">
+            <input type="radio" v-model="form.candidate_id" :value="candidate.id" class="peer sr-only" :disabled="user?.has_voted">
 
             <div :class="[
               'neo-card overflow-hidden transition-all duration-150 h-full flex flex-col relative',
@@ -78,7 +78,7 @@
         </div>
 
         <!-- Submit Button -->
-        <div v-if="!user.has_voted" class="mt-10 mb-4 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700 flex justify-center">
+        <div v-if="!user?.has_voted" class="mt-10 mb-4 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700 flex justify-center">
           <button type="submit" :disabled="!form.candidate_id || form.processing"
             class="neo-btn bg-neo-yellow text-neo-black py-3 md:py-4 px-8 md:px-12 text-sm md:text-lg shadow-neo disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0">
             <span class="material-symbols-outlined text-xl md:text-2xl">verified</span>

@@ -1,4 +1,4 @@
-<template>
+/<template>
   <AuthenticatedLayout title="KELOLA ADMIN">
     <!-- Header -->
     <div class="neo-page-header bg-white shadow-neo mb-6 md:mb-8">

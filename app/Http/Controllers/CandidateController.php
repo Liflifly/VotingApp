@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidate;
-use Illuminate\Http\Request;
 
 class CandidateController extends Controller
 {
@@ -12,4 +11,3 @@ class CandidateController extends Controller
         return view('candidates.show', compact('candidate'));
     }
 }
-

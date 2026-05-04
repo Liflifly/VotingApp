@@ -10,6 +10,7 @@ class AdminUserController extends Controller
     public function index()
     {
         $users = User::orderBy('name')->get();
+
         return \Inertia\Inertia::render('Admin/Users/Index', compact('users'));
     }
 
@@ -24,4 +25,3 @@ class AdminUserController extends Controller
         return redirect()->route('admin.users.index')->with('success', 'Boom! Pangkat admin berhasil diubah sesuai perintah.');
     }
 }
-

@@ -2,8 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Candidate;
-use App\Models\Vote;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,7 +20,7 @@ class Election extends Model
 
     protected $casts = [
         'starts_at' => 'datetime',
-        'ends_at'   => 'datetime',
+        'ends_at' => 'datetime',
     ];
 
     public function candidates()
@@ -43,8 +41,8 @@ class Election extends Model
     public function scopeActive($query)
     {
         return $query->where('status', 'active')
-                     ->where('starts_at', '<=', now())
-                     ->where('ends_at', '>=', now());
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>=', now());
     }
 
     public function isActive(): bool

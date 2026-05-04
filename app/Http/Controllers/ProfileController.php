@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Str;
 
 class ProfileController extends Controller
 {
@@ -48,40 +47,21 @@ class ProfileController extends Controller
     public function updateAvatar(Request $request): RedirectResponse
     {
         $request->validate([
-            'image' => ['required', 'string'], // base64 string
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
 
         $user = $request->user();
-        $imageData = $request->input('image');
-
-        // Parse base64
-        if (preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
-            $imageData = substr($imageData, strpos($imageData, ',') + 1);
-            $type = strtolower($type[1]); // jpg, png, etc
-
-            if (!in_array($type, ['jpg', 'jpeg', 'png', 'webp'])) {
-                return back()->withErrors(['image' => 'Format gambar tidak valid.']);
-            }
-
-            $imageData = base64_decode($imageData);
-
-            if ($imageData === false) {
-                return back()->withErrors(['image' => 'Gagal mendekode gambar.']);
-            }
-        } else {
-            return back()->withErrors(['image' => 'Data gambar tidak valid.']);
-        }
-
-        $fileName = 'avatars/' . $user->id . '_' . time() . '.' . $type;
+        
+        $fileName = 'avatars/'.$user->id.'_'.time().'.'.$request->file('image')->extension();
 
         // Delete old avatar if exists
         if ($user->avatar) {
             Storage::disk('public')->delete($user->avatar);
         }
 
-        Storage::disk('public')->put($fileName, $imageData);
+        $path = $request->file('image')->storeAs('avatars', basename($fileName), 'public');
 
-        $user->update(['avatar' => $fileName]);
+        $user->update(['avatar' => $path]);
 
         return Redirect::route('profile.edit')->with('status', 'avatar-updated');
     }

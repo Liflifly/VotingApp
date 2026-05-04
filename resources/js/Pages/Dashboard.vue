@@ -92,7 +92,7 @@
             </h4>
             <p class="font-body text-xs md:text-sm text-neo-grey line-clamp-2 mb-3 md:mb-4">{{ candidate.vision }}</p>
             
-            <Link v-if="!user.has_voted" :href="route('vote.index')" class="neo-btn-primary w-full text-[10px] md:text-xs py-2 md:py-2.5">
+            <Link v-if="!user?.has_voted" :href="route('vote.index')" class="neo-btn-primary w-full text-[10px] md:text-xs py-2 md:py-2.5">
               PILIH HERO →
             </Link>
             <div v-else class="neo-btn w-full text-[10px] md:text-xs py-2 md:py-2.5 bg-gray-100 text-neo-grey border-gray-300 shadow-none cursor-default justify-center">
