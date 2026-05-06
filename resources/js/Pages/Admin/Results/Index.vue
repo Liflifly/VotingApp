@@ -10,9 +10,32 @@
           <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">leaderboard</span>
           ADMIN RESULTS
         </h1>
-        <p class="font-body text-xs md:text-sm text-neo-grey">
+        <p class="font-body text-xs md:text-sm text-neo-grey uppercase font-bold tracking-wider">
           {{ selectedElection ? selectedElection.name : 'Belum ada data' }}
         </p>
+      </div>
+    </div>
+
+    <!-- Catatan Periode (Jika ada) -->
+    <div v-if="selectedElection && selectedElection.notes" class="neo-card bg-neo-yellow/10 border-2 border-neo-black p-4 md:p-5 mb-6 md:mb-8 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-8 h-8 bg-neo-yellow/20 border-l border-b border-neo-black"></div>
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 w-full">
+        <div class="flex items-start gap-3 flex-1">
+          <span class="material-symbols-outlined text-neo-yellow text-2xl font-bold bg-neo-black p-1.5 shrink-0 shadow-[2px_2px_0px_#000]">event_note</span>
+          <div>
+            <h4 class="font-heading font-black text-xs md:text-sm uppercase tracking-wider text-neo-black mb-1">CATATAN PERIODE</h4>
+            <p class="font-body text-xs md:text-sm text-neo-black leading-relaxed whitespace-pre-line uppercase font-bold">{{ selectedElection.notes }}</p>
+          </div>
+        </div>
+        
+        <!-- Scroll Button -->
+        <button 
+          @click="scrollToCandidates" 
+          class="neo-btn bg-white hover:bg-neo-blue hover:text-white text-neo-black py-2 px-3 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 shrink-0 self-stretch sm:self-auto flex items-center justify-center gap-2 text-xs font-heading font-black focus:outline-none"
+        >
+          LIHAT KANDIDAT
+          <span class="material-symbols-outlined text-base animate-bounce">arrow_downward</span>
+        </button>
       </div>
     </div>
 
@@ -34,7 +57,7 @@
 
     <!-- Results Table -->
     <div v-if="results.length">
-      <h3 class="font-heading font-black text-lg md:text-h2 uppercase mb-3 md:mb-4 flex items-center gap-2">
+      <h3 id="ranking-section" class="font-heading font-black text-lg md:text-h2 uppercase mb-3 md:mb-4 flex items-center gap-2">
         <span class="material-symbols-outlined text-neo-grey">format_list_numbered</span>
         RANKING KANDIDAT
       </h3>
@@ -78,4 +101,8 @@ const sortedResults = computed(() => [...(props.results || [])].sort((a, b) => b
 const turnoutNumber = computed(() => props.totalVoters ? (props.totalVotes / props.totalVoters) * 100 : 0);
 const turnout = computed(() => turnoutNumber.value.toFixed(1));
 const getPercentage = (v) => props.totalVotes ? ((v / props.totalVotes) * 100).toFixed(1) : 0;
+
+const scrollToCandidates = () => {
+  document.getElementById('ranking-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 </script>

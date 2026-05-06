@@ -14,7 +14,12 @@ Route::get('/', function () {
 });
 
 Route::get('/welcome', function () {
-    return \Inertia\Inertia::render('Welcome');
+    $activeElection = \App\Models\Election::active()->first();
+    $totalUsers = \App\Models\User::where('role', 'user')->count();
+    return \Inertia\Inertia::render('Welcome', [
+        'activeElection' => $activeElection,
+        'totalUsers' => $totalUsers,
+    ]);
 })->name('welcome');
 
 Route::get('/dashboard', function () {
@@ -38,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.destroy');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/vote', [VoteController::class, 'index'])->name('vote.index');
     Route::post('/vote', [VoteController::class, 'store'])->name('vote.store');

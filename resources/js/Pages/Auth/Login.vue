@@ -1,5 +1,5 @@
 <template>
-  <GuestLayout title="MASUK" subtitle="Masukkan kredensial untuk memasuki arena.">
+  <GuestLayout title="MASUK" subtitle="Masukkan kredensial Anda untuk mengakses sistem.">
     <!-- Error Message -->
     <div v-if="$page.props.flash.error" class="bg-neo-red border-neo border-neo-black p-4 mb-6 shadow-neo animate-in fade-in slide-in-from-top-4 duration-300">
       <div class="flex items-center gap-3">

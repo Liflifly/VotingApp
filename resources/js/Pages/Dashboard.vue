@@ -9,7 +9,7 @@
           <span class="material-symbols-outlined text-3xl md:text-4xl text-neo-grey">event_busy</span>
         </div>
         <h2 class="font-heading font-black text-h2 uppercase mb-2">BELUM ADA PEMILIHAN</h2>
-        <p class="font-body text-sm md:text-body-md text-neo-grey">Saat ini tidak ada periode pemilihan aktif. Kembali lagi nanti, warrior.</p>
+        <p class="font-body text-sm md:text-body-md text-neo-grey">Saat ini tidak ada periode pemilihan aktif. Silakan periksa kembali nanti.</p>
       </div>
     </div>
 
@@ -30,18 +30,18 @@
             </div>
             <h2 class="font-heading font-black text-[28px] sm:text-[36px] md:text-h1 uppercase text-white mb-2 truncate">{{ activeElection.name }}</h2>
             <p class="font-body text-xs md:text-sm text-blue-100 max-w-lg">
-              Gunakan hak suaramu untuk menentukan masa depan. Arena pemilihan sedang berlangsung!
+              Gunakan hak suara Anda untuk menentukan masa depan. Periode pemilihan sedang berlangsung!
             </p>
           </div>
 
           <!-- Stats -->
           <div class="flex gap-3 md:gap-4 w-full md:w-auto">
             <div class="bg-white border-neo border-neo-black p-3 md:p-4 text-center flex-1 md:flex-none md:min-w-[120px]">
-              <div class="font-heading text-[24px] md:text-stats text-neo-blue">{{ totalVotes }}</div>
+              <div class="font-heading font-black text-stats text-neo-blue">{{ totalVotes }}</div>
               <div class="font-heading text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-neo-grey mt-1">TOTAL SUARA</div>
             </div>
             <div class="bg-white border-neo border-neo-black p-3 md:p-4 text-center flex-1 md:flex-none md:min-w-[120px]">
-              <div class="font-heading text-[24px] md:text-stats text-neo-black">{{ candidates?.length || 0 }}</div>
+              <div class="font-heading font-black text-stats text-neo-black">{{ candidates?.length || 0 }}</div>
               <div class="font-heading text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-neo-grey mt-1">KANDIDAT</div>
             </div>
           </div>
@@ -51,8 +51,8 @@
       <!-- Quick Action Bar -->
       <div class="flex flex-col sm:flex-row gap-3 mb-6 md:mb-8">
         <Link :href="route('vote.index')" class="neo-btn-primary flex-1 text-xs py-3 justify-center">
-          <span class="material-symbols-outlined text-base">how_to_vote</span>
-          PILIH SEKARANG
+          <span class="material-symbols-outlined text-base">groups</span>
+          LIHAT KANDIDAT
         </Link>
         <Link :href="route('results.index')" class="neo-btn-secondary flex-1 text-xs py-3 justify-center">
           <span class="material-symbols-outlined text-base">analytics</span>
@@ -60,42 +60,66 @@
         </Link>
       </div>
 
-      <!-- Hero Selection -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
+      <!-- Catatan Periode (Jika ada) -->
+      <div v-if="activeElection.notes" class="neo-card bg-neo-yellow/10 border-2 border-neo-black p-4 md:p-5 mb-6 md:mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-8 h-8 bg-neo-yellow/20 border-l border-b border-neo-black"></div>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 w-full">
+          <div class="flex items-start gap-3 flex-1">
+            <span class="material-symbols-outlined text-neo-yellow text-2xl font-bold bg-neo-black p-1.5 shrink-0 shadow-[2px_2px_0px_#000]">event_note</span>
+            <div>
+              <h4 class="font-heading font-black text-xs md:text-sm uppercase tracking-wider text-neo-black mb-1">CATATAN PERIODE</h4>
+              <p class="font-body text-xs md:text-sm text-neo-black leading-relaxed whitespace-pre-line">{{ activeElection.notes }}</p>
+            </div>
+          </div>
+          
+          <!-- Scroll Button -->
+          <button 
+            @click="scrollToCandidates" 
+            class="neo-btn bg-white hover:bg-neo-blue hover:text-white text-neo-black py-2 px-3 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 shrink-0 self-stretch sm:self-auto flex items-center justify-center gap-2 text-xs font-heading font-black focus:outline-none"
+          >
+            LIHAT KANDIDAT
+            <span class="material-symbols-outlined text-base animate-bounce">arrow_downward</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Candidate Selection (FORMALIZED FROM HERO SELECTION) -->
+      <div id="candidates-section" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 md:mb-6">
         <h3 class="font-heading font-black text-lg md:text-h2 uppercase flex items-center gap-3">
           <span class="material-symbols-outlined text-neo-blue">groups</span>
-          HERO SELECTION
+          DAFTAR KANDIDAT
         </h3>
         <span class="neo-badge bg-neo-yellow text-neo-black">{{ candidates?.length || 0 }} KANDIDAT</span>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <!-- Candidate Grid (Made smaller and more consistent with Vote Index) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
         <div v-for="candidate in candidates" :key="candidate.id"
-          class="neo-card overflow-hidden group hover:shadow-neo-hover hover:-translate-x-[1px] hover:-translate-y-[1px] transition-all relative">
+          class="neo-card overflow-hidden group hover:shadow-neo-hover hover:-translate-x-[1px] hover:-translate-y-[1px] transition-all relative flex flex-col bg-white">
           
-          <!-- Photo -->
-          <div class="aspect-square bg-gray-100 border-b-neo border-neo-black relative overflow-hidden">
+          <!-- Photo (Restricted height to look smaller and formal) -->
+          <div class="h-36 sm:h-40 w-full bg-gray-100 border-b-neo border-neo-black relative overflow-hidden shrink-0">
             <img v-if="candidate.photo" :src="`/storage/${candidate.photo}`" :alt="candidate.name" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
             <div v-else class="w-full h-full flex items-center justify-center">
-              <span class="material-symbols-outlined text-5xl md:text-6xl text-gray-300">person</span>
+              <span class="material-symbols-outlined text-4xl text-gray-300">person</span>
             </div>
             <!-- Number Badge -->
-            <div class="absolute top-3 left-3 bg-neo-yellow border-2 border-neo-black px-2.5 py-0.5 md:px-3 md:py-1">
-              <span class="font-heading text-xs md:text-sm font-black">#{{ candidate.order_number }}</span>
+            <div class="absolute top-2.5 left-2.5 bg-neo-yellow border-2 border-neo-black px-2 py-0.5">
+              <span class="font-heading text-[10px] md:text-xs font-black">#{{ candidate.order_number }}</span>
             </div>
           </div>
 
           <!-- Info -->
-          <div class="p-4 md:p-5">
-            <h4 class="font-heading font-black text-base md:text-lg uppercase mb-1 group-hover:text-neo-blue transition-colors">
+          <div class="p-3 md:p-4 flex flex-col flex-1">
+            <h4 class="font-heading font-black text-sm md:text-base uppercase mb-1 group-hover:text-neo-blue transition-colors truncate">
               {{ candidate.name }}
             </h4>
-            <p class="font-body text-xs md:text-sm text-neo-grey line-clamp-2 mb-3 md:mb-4">{{ candidate.vision }}</p>
+            <p class="font-body text-[11px] md:text-xs text-neo-grey line-clamp-2 mb-3 flex-1">{{ candidate.vision }}</p>
             
-            <Link v-if="!user?.has_voted" :href="route('vote.index')" class="neo-btn-primary w-full text-[10px] md:text-xs py-2 md:py-2.5">
-              PILIH HERO →
+            <Link v-if="!user?.has_voted" :href="route('vote.index')" class="neo-btn-primary w-full text-[10px] md:text-xs py-2 justify-center">
+              LIHAT DETAIL KANDIDAT →
             </Link>
-            <div v-else class="neo-btn w-full text-[10px] md:text-xs py-2 md:py-2.5 bg-gray-100 text-neo-grey border-gray-300 shadow-none cursor-default justify-center">
+            <div v-else class="neo-btn w-full text-[10px] md:text-xs py-2 bg-gray-100 text-neo-grey border-gray-300 shadow-none cursor-default justify-center">
               ✓ SUDAH MEMILIH
             </div>
           </div>
@@ -115,4 +139,8 @@ defineProps({
   candidates: Array,
   totalVotes: Number,
 });
+
+const scrollToCandidates = () => {
+  document.getElementById('candidates-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 </script>

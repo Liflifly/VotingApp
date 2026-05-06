@@ -57,9 +57,9 @@ class AdminElectionController extends Controller
             return \Inertia\Inertia::render('Admin/Elections/Edit', compact('election'));
         }
 
-        if ($election->status !== 'draft') {
+        if ($election->status !== 'draft' && $election->status !== 'active') {
             return redirect()->route('admin.elections.show', $election)
-                ->with('error', 'Waduh, cuma periode yang masih status Draft yang boleh dimodif!');
+                ->with('error', 'Waduh, cuma periode dengan status Draft atau Aktif yang boleh dimodif!');
         }
 
         return \Inertia\Inertia::render('Admin/Elections/Edit', compact('election'));
@@ -100,9 +100,9 @@ class AdminElectionController extends Controller
             'notes'     => 'nullable|string',
         ]);
 
-        if ($election->status !== 'draft') {
+        if ($election->status !== 'draft' && $election->status !== 'active') {
             return redirect()->route('admin.elections.show', $election)
-                ->with('error', 'Waduh, cuma periode yang masih status Draft yang boleh dimodif!');
+                ->with('error', 'Waduh, cuma periode dengan status Draft atau Aktif yang boleh dimodif!');
         }
 
         $election->update($validated);
@@ -111,10 +111,27 @@ class AdminElectionController extends Controller
             ->with('success', 'Mantap! Info periode sudah di-update secara optimal.');
     }
 
+    public function destroy(Election $election)
+    {
+        if ($election->status !== 'draft') {
+            return back()->with('error', 'Hanya periode berstatus Draft yang bisa dihapus!');
+        }
+
+        $election->delete();
+
+        return redirect()->route('admin.elections.index')
+            ->with('success', 'Sip! Draft periode berhasil dihapus.');
+    }
+
     public function activate(Election $election)
     {
-        if ($election->candidates()->count() === 0) {
-            return back()->with('error', 'Waduh, belum ada kandidat. Tambahin dulu biar seru!');
+        if (now() < \Illuminate\Support\Carbon::parse($election->starts_at)) {
+            $startTime = \Illuminate\Support\Carbon::parse($election->starts_at)->translatedFormat('d F Y, H.i');
+            return back()->with('error', "Waduh, belum masuk waktu mulai periode! Periode ini baru bisa diaktifkan mulai {$startTime}.");
+        }
+
+        if ($election->candidates()->count() < 2) {
+            return back()->with('error', 'Waduh, minimal harus ada 2 kandidat untuk memulai pemilihan!');
         }
 
         DB::transaction(function () use ($election) {

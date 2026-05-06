@@ -41,7 +41,7 @@
 
       <!-- Footer tag -->
       <div class="relative z-10 flex items-center gap-4">
-        <div class="font-heading text-xs font-bold text-neo-yellow uppercase tracking-[0.2em]">
+        <div class="font-heading text-xs font-bold text-neo-white uppercase tracking-[0.2em]">
           #KOSGOROMEMILIH
         </div>
         <div class="flex-1 h-[2px] bg-white/20"></div>
@@ -74,6 +74,17 @@
           </div>
         </div>
 
+        <!-- Back Link -->
+        <div class="mb-5 flex">
+          <Link 
+            :href="route('welcome')" 
+            class="inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white font-heading text-[10px] md:text-xs font-black uppercase tracking-wider text-neo-black dark:text-white shadow-[3px_3px_0px_#000] dark:shadow-[3px_3px_0px_rgba(255,255,255,0.8)] hover:bg-neo-yellow dark:hover:bg-neo-yellow hover:text-neo-black dark:hover:text-neo-black hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0px_#000] dark:hover:shadow-[1.5px_1.5px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-100 group focus:outline-none"
+          >
+            <span class="material-symbols-outlined text-base font-bold group-hover:-translate-x-1 transition-transform text-neo-blue">arrow_back</span>
+            KEMBALI KE HALAMAN UTAMA
+          </Link>
+        </div>
+
         <!-- Title -->
         <h2 class="font-heading font-black text-h2 uppercase text-neo-black mb-1">
           {{ title }}
@@ -89,6 +100,27 @@
       <!-- Bottom stripe on right panel -->
       <div class="neo-stripe-thin mt-auto"></div>
     </div>
+    <!-- Scroll to Top Button -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-4 scale-75"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition-opacity duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <button 
+        v-show="showScrollTop"
+        @click="scrollToTop"
+        class="fixed z-[9999] bg-neo-yellow text-neo-black border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:bg-neo-blue hover:text-white hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-300 flex items-center justify-center focus:outline-none"
+        :class="isAtBottom ? 'bottom-6 left-[calc(50%-4rem)] w-32 h-10 rounded-none px-3 gap-1.5' : 'bottom-6 left-[calc(100%-4.5rem)] w-12 h-12 hover:translate-x-[1.5px] hover:translate-y-[1.5px]'"
+        aria-label="Scroll to top"
+      >
+        <span v-if="isAtBottom" class="whitespace-nowrap font-heading font-black tracking-wider text-[11px] select-none">KE ATAS</span>
+        <span class="material-symbols-outlined font-bold text-xl">arrow_upward</span>
+      </button>
+    </Transition>
+
     <NeoToast />
   </div>
 </template>
@@ -96,6 +128,8 @@
 <script setup>
 import NeoToast from '@/Components/NeoToast.vue';
 import { useDarkMode } from '@/Composables/useDarkMode.js';
+import { Link, router } from '@inertiajs/vue3';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 defineProps({
   title: String,
@@ -104,4 +138,49 @@ defineProps({
 
 // Initialize dark mode (no-op if already initialized, just keeps reactive)
 useDarkMode();
+
+const showScrollTop = ref(false);
+const isAtBottom = ref(false);
+const isScrollingToTop = ref(false);
+
+const handleScroll = () => {
+  if (isScrollingToTop.value) return;
+
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  showScrollTop.value = scrollTop > 300;
+
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  
+  isAtBottom.value = (scrollTop + clientHeight) >= (scrollHeight - 45);
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
+
+const scrollToTop = () => {
+  isScrollingToTop.value = true;
+  showScrollTop.value = false;
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  setTimeout(() => {
+    isScrollingToTop.value = false;
+    isAtBottom.value = false;
+  }, 800);
+};
+
+router.on('navigate', () => { 
+  showScrollTop.value = false;
+  isAtBottom.value = false;
+  isScrollingToTop.value = false;
+});
 </script>

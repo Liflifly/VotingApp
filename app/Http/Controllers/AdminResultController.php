@@ -19,9 +19,9 @@ class AdminResultController extends Controller
         // Ambil semua election untuk dropdown filter
         $elections = Election::latest()->get();
 
-        // Tentukan election yang aktif ditampilkan
-        $selectedElection = Election::active()->first()
-            ?? Election::where('status', 'ended')->latest()->first();
+        $selectedElection = Election::where('status', 'active')->first()
+            ?? Election::where('status', 'ended')->latest()->first()
+            ?? Election::latest()->first();
 
         $results = collect();
         $totalVotes = 0;

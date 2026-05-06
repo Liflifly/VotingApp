@@ -19,8 +19,9 @@
         <div class="absolute top-0 right-0 w-6 h-6 border-l border-b" :class="u.role === 'super_admin' ? 'bg-neo-red/10 border-neo-red/20' : u.role === 'admin' ? 'bg-neo-blue/10 border-neo-blue/20' : 'bg-gray-100 border-gray-200'"></div>
         
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 md:w-10 md:h-10 border-2 border-neo-black flex items-center justify-center shrink-0" :class="u.role === 'super_admin' ? 'bg-neo-red' : u.role === 'admin' ? 'bg-neo-blue' : 'bg-gray-200'">
-            <span class="material-symbols-outlined text-lg" :class="u.role === 'super_admin' || u.role === 'admin' ? 'text-white' : 'text-neo-black'">person</span>
+          <div class="w-9 h-9 md:w-10 md:h-10 border-2 border-neo-black flex items-center justify-center shrink-0 overflow-hidden" :class="u.role === 'super_admin' ? 'bg-neo-red' : u.role === 'admin' ? 'bg-neo-blue' : 'bg-gray-200'">
+            <img v-if="u.avatar" :src="u.avatar.startsWith('http') || u.avatar.startsWith('/storage') ? u.avatar : '/storage/' + u.avatar" :alt="u.name" class="w-full h-full object-cover grayscale" />
+            <span v-else class="material-symbols-outlined text-lg" :class="u.role === 'super_admin' || u.role === 'admin' ? 'text-white' : 'text-neo-black'">person</span>
           </div>
           <div class="min-w-0">
             <div class="font-heading font-bold text-xs md:text-sm uppercase truncate">{{ u.name }}</div>

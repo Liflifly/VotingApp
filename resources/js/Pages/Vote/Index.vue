@@ -7,95 +7,235 @@
         <div class="w-16 h-16 md:w-20 md:h-20 bg-gray-100 border-neo border-neo-black mx-auto mb-4 md:mb-6 flex items-center justify-center">
           <span class="material-symbols-outlined text-3xl md:text-4xl text-neo-grey">ballot</span>
         </div>
-        <h2 class="font-heading font-black text-h2 uppercase mb-2">ARENA BELUM DIBUKA</h2>
-        <p class="font-body text-sm md:text-body-md text-neo-grey">Tunggu hingga admin membuka arena pemilihan.</p>
+        <h2 class="font-heading font-black text-h2 uppercase mb-2">PEMILIHAN BELUM DIBUKA</h2>
+        <p class="font-body text-sm md:text-body-md text-neo-grey">Silakan tunggu hingga administrator membuka periode pemilihan.</p>
       </div>
     </div>
 
     <div v-else>
-      <!-- Header Section -->
+      <!-- Header Section (Fully aligned size and styles with other pages) -->
       <div class="neo-page-header bg-white shadow-neo mb-6 md:mb-8">
         <div class="absolute top-0 right-0 w-16 h-16 bg-neo-blue/10 border-l-2 border-b-2 border-neo-blue/20"></div>
         <div class="absolute bottom-0 left-0 w-10 h-10 bg-neo-yellow/10 border-r-2 border-t-2 border-neo-yellow/20"></div>
         
         <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div>
-            <h1 class="font-heading font-black text-lg md:text-h1 uppercase mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
-              <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">how_to_vote</span>
-              PILIH KANDIDATMU
-            </h1>
-            <p class="font-body text-xs md:text-body-md text-neo-grey">Klik pada kartu kandidat untuk memilih, lalu tekan tombol konfirmasi.</p>
+          <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">how_to_vote</span>
+            <div>
+              <h1 class="font-heading font-black text-lg md:text-h1 uppercase mb-1 flex items-center gap-2 md:gap-3">
+                PILIH KANDIDATMU
+              </h1>
+              <p class="font-body text-xs md:text-sm text-neo-grey">Klik "BACA DETAIL" pada kartu kandidat, lalu berikan suara setelah membaca semuanya.</p>
+            </div>
           </div>
-          <div v-if="user?.has_voted" class="neo-badge bg-gray-200 text-neo-black">
+          <div v-if="user?.has_voted" class="neo-badge bg-gray-200 text-neo-black shrink-0">
             <span class="material-symbols-outlined text-sm">check_circle</span>
             SUDAH MEMILIH
           </div>
-          <div v-else class="neo-badge-live neo-pulse">
+          <div v-else class="neo-badge-live neo-pulse shrink-0">
             <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
             VOTING AKTIF
           </div>
         </div>
       </div>
 
-      <form @submit.prevent="submitVote">
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-          <label v-for="candidate in candidates" :key="candidate.id" class="cursor-pointer block" :class="{ 'pointer-events-none': user?.has_voted }">
-            <input type="radio" v-model="form.candidate_id" :value="candidate.id" class="peer sr-only" :disabled="user?.has_voted">
-
-            <div :class="[
-              'neo-card overflow-hidden transition-all duration-150 h-full flex flex-col relative',
-              form.candidate_id === candidate.id
-                ? 'border-neo-blue shadow-neo-blue -translate-x-[2px] -translate-y-[2px]'
-                : 'hover:shadow-neo-hover hover:-translate-x-[1px] hover:-translate-y-[1px]'
-            ]">
-              <!-- Photo -->
-              <div class="aspect-[4/3] bg-gray-100 border-b-neo border-neo-black relative overflow-hidden">
-                <img v-if="candidate.photo" :src="`/storage/${candidate.photo}`" class="w-full h-full object-cover">
-                <div v-else class="w-full h-full flex items-center justify-center">
-                  <span class="material-symbols-outlined text-5xl md:text-6xl text-gray-300">person</span>
-                </div>
-                <div class="absolute top-3 left-3 bg-neo-yellow border-2 border-neo-black px-2.5 py-0.5 md:px-3 md:py-1">
-                  <span class="font-heading text-xs md:text-sm font-black">#{{ candidate.order_number }}</span>
-                </div>
-                <!-- Selected Indicator -->
-                <div v-if="form.candidate_id === candidate.id" class="absolute top-3 right-3 bg-neo-blue border-2 border-neo-black p-1">
-                  <span class="material-symbols-outlined text-white text-lg">check</span>
-                </div>
-              </div>
-
-              <!-- Info -->
-              <div class="p-4 md:p-5 flex flex-col flex-1">
-                <h3 class="font-heading font-black text-base md:text-lg uppercase mb-1 md:mb-2">{{ candidate.name }}</h3>
-                <p class="font-body text-xs md:text-sm text-neo-grey mb-3 line-clamp-2 flex-1">{{ candidate.vision }}</p>
-
-                <div class="font-heading text-[10px] md:text-xs font-bold uppercase tracking-wider text-center py-2 border-neo transition-colors"
-                  :class="form.candidate_id === candidate.id ? 'bg-neo-blue text-white border-neo-blue' : 'bg-gray-50 text-neo-grey border-gray-200'">
-                  {{ form.candidate_id === candidate.id ? '✓ TERPILIH' : 'PILIH KANDIDAT' }}
-                </div>
-              </div>
+      <!-- Catatan Periode (Jika ada) -->
+      <div v-if="activeElection.notes" class="neo-card bg-neo-yellow/10 border-2 border-neo-black p-4 md:p-5 mb-6 md:mb-8 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-8 h-8 bg-neo-yellow/20 border-l border-b border-neo-black"></div>
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 w-full">
+          <div class="flex items-start gap-3 flex-1">
+            <span class="material-symbols-outlined text-neo-yellow text-2xl font-bold bg-neo-black p-1.5 shrink-0 shadow-[2px_2px_0px_#000]">event_note</span>
+            <div>
+              <h4 class="font-heading font-black text-xs md:text-sm uppercase tracking-wider text-neo-black mb-1">CATATAN PERIODE</h4>
+              <p class="font-body text-xs md:text-sm text-neo-black leading-relaxed whitespace-pre-line">{{ activeElection.notes }}</p>
             </div>
-          </label>
-        </div>
-
-        <!-- Submit Button -->
-        <div v-if="!user?.has_voted" class="mt-10 mb-4 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700 flex justify-center">
-          <!-- UI-04 FIX: Tambahkan loading indicator saat form.processing -->
-          <button type="submit" :disabled="!form.candidate_id || form.processing"
-            class="neo-btn bg-neo-yellow text-neo-black py-3 md:py-4 px-8 md:px-12 text-sm md:text-lg shadow-neo disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0">
-            <span v-if="form.processing" class="material-symbols-outlined text-xl md:text-2xl animate-spin">autorenew</span>
-            <span v-else class="material-symbols-outlined text-xl md:text-2xl">verified</span>
-            {{ form.processing ? 'MENGIRIM SUARA...' : 'KIRIM SUARA \u2192' }}
+          </div>
+          
+          <!-- Scroll Button -->
+          <button 
+            @click="scrollToVoteForm" 
+            class="neo-btn bg-white hover:bg-neo-blue hover:text-white text-neo-black py-2 px-3 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 shrink-0 self-stretch sm:self-auto flex items-center justify-center gap-2 text-xs font-heading font-black focus:outline-none"
+          >
+            PILIH KANDIDAT
+            <span class="material-symbols-outlined text-base animate-bounce">arrow_downward</span>
           </button>
         </div>
-      </form>
+      </div>
+
+      <!-- Candidate Grid -->
+      <div id="candidates-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 mb-6 md:mb-8">
+        <Link v-for="candidate in candidates" :key="candidate.id" :href="route('candidates.show', candidate.id)" class="block">
+          <div :class="[
+            'neo-card overflow-hidden transition-all duration-150 h-full flex flex-col relative group',
+            hasRead(candidate.id) ? 'bg-gray-50/60' : 'bg-white',
+            'hover:shadow-neo-hover hover:-translate-x-[1px] hover:-translate-y-[1px]'
+          ]">
+            <!-- Photo (Height restricted for a tighter, premium feel) -->
+            <div class="h-36 sm:h-40 w-full bg-gray-100 border-b-neo border-neo-black relative overflow-hidden shrink-0">
+              <img v-if="candidate.photo" :src="`/storage/${candidate.photo}`" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+              <div v-else class="w-full h-full flex items-center justify-center">
+                <span class="material-symbols-outlined text-4xl text-gray-300">person</span>
+              </div>
+              <div class="absolute top-2.5 left-2.5 bg-neo-yellow border-2 border-neo-black px-2 py-0.5">
+                <span class="font-heading text-[10px] md:text-xs font-black">#{{ candidate.order_number }}</span>
+              </div>
+              
+              <div v-if="hasRead(candidate.id)" class="absolute top-2.5 right-2.5 bg-green-500 border-2 border-neo-black p-0.5 flex items-center justify-center rounded-none">
+                <span class="material-symbols-outlined text-white text-base">check_circle</span>
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="p-3 md:p-4 flex flex-col flex-1">
+              <h3 class="font-heading font-black text-sm md:text-base uppercase mb-1 group-hover:text-neo-blue transition-colors truncate">{{ candidate.name }}</h3>
+              <p class="font-body text-[11px] md:text-xs text-neo-grey mb-4 line-clamp-2 flex-1">{{ candidate.vision }}</p>
+
+              <div class="w-full text-[10px] md:text-xs py-2 mt-auto text-center"
+                :class="hasRead(candidate.id) ? 'neo-btn-secondary' : 'neo-btn-primary'">
+                {{ hasRead(candidate.id) ? 'BACA LAGI' : 'BACA DETAIL & VOTE →' }}
+              </div>
+            </div>
+          </div>
+        </Link>
+      </div>
+
+      <!-- Action Footer -->
+      <div id="vote-form-section" v-if="!user?.has_voted" class="mt-10 mb-4 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center gap-4 w-full">
+        <div class="text-center flex flex-col items-center gap-3">
+          <p class="font-heading font-bold text-xs uppercase text-neo-grey">Syarat Voting: Anda harus membaca visi misi semua kandidat terlebih dahulu.</p>
+          
+          <div class="flex flex-wrap items-center justify-center gap-4">
+            <div class="flex items-center gap-2">
+              <span :class="['w-3 h-3 border-2 border-neo-black', allRead ? 'bg-green-500 animate-pulse' : 'bg-neo-red']"></span>
+              <span class="font-heading text-sm font-black uppercase">{{ readCandidates.length }} / {{ candidates.length }} KANDIDAT DIBACA</span>
+            </div>
+            
+            <!-- Bypass Button -->
+            <button 
+              v-if="!allRead"
+              @click="markAllAsRead"
+              class="neo-btn bg-neo-yellow hover:bg-neo-blue hover:text-white text-neo-black py-1.5 px-3 border-2 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-[10px] md:text-xs font-heading font-black flex items-center gap-1.5 focus:outline-none"
+            >
+              <span class="material-symbols-outlined text-sm font-bold">done_all</span>
+              SAYA SUDAH MEMBACA SELURUH DETAIL KANDIDAT SEBELUMNYA
+            </button>
+          </div>
+        </div>
+
+        <!-- Form Pemilihan (Set to w-full to align side borders exactly with candidates grid) -->
+        <form v-if="allRead" @submit.prevent="submitVote" class="w-full bg-white border-2 border-neo-black p-5 sm:p-6 shadow-neo flex flex-col gap-4">
+          <div>
+            <label class="block font-heading text-xs font-black uppercase text-neo-black mb-3">PILIH KANDIDAT ANDA:</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              <label v-for="candidate in candidates" :key="candidate.id" 
+                :class="[
+                  'flex items-center gap-3 p-3 border-2 border-neo-black cursor-pointer transition-all shadow-neo-sm',
+                  form.candidate_id === candidate.id ? 'bg-neo-blue text-white translate-x-[2px] translate-y-[2px] shadow-none' : 'bg-white hover:bg-gray-50'
+                ]"
+              >
+                <input type="radio" v-model="form.candidate_id" :value="candidate.id" class="sr-only">
+                <span class="font-heading font-black text-sm" :class="form.candidate_id === candidate.id ? 'text-neo-yellow' : 'text-neo-black'">#{{ candidate.order_number }}</span>
+                <span class="font-heading font-bold text-sm uppercase flex-1 truncate">{{ candidate.name }}</span>
+                <span class="material-symbols-outlined text-lg" v-if="form.candidate_id === candidate.id">check_circle</span>
+              </label>
+            </div>
+          </div>
+
+          <button type="submit" :disabled="!form.candidate_id || form.processing" 
+            class="neo-btn bg-neo-yellow text-neo-black w-full py-3 text-sm md:text-base shadow-neo disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none disabled:translate-x-0 disabled:translate-y-0"
+          >
+            <span v-if="form.processing" class="material-symbols-outlined text-xl animate-spin">autorenew</span>
+            <span v-else class="material-symbols-outlined text-xl">how_to_vote</span>
+            {{ form.processing ? 'MENGIRIM SUARA...' : 'KIRIM SUARA \u2192' }}
+          </button>
+        </form>
+        
+        <!-- Locked Form Overlay Container -->
+        <div v-else class="w-full bg-gray-50 border-2 border-dashed border-gray-300 p-6 text-center">
+          <p class="font-heading font-bold text-xs uppercase text-neo-grey">
+            Formulir pemilihan terkunci. Silakan baca detail visi & misi semua kandidat di atas untuk membuka formulir.
+          </p>
+        </div>
+
+        <!-- Scroll to Top Button -->
+        <button @click="scrollToCandidates" class="inline-flex items-center gap-1 font-heading font-bold text-[10px] sm:text-xs uppercase tracking-wider text-neo-black dark:text-white bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white px-3 py-2 hover:bg-neo-yellow hover:text-neo-black transition-colors w-fit shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none mt-2">
+          <span class="material-symbols-outlined text-sm sm:text-base">arrow_upward</span>
+          LIHAT DETAIL KANDIDAT
+        </button>
+      </div>
     </div>
+
+    <!-- ═══ NEO VOTE CONFIRMATION MODAL ═══ -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="opacity-0 scale-95 translate-y-4"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-95 translate-y-4"
+      >
+        <div v-if="showConfirmModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <!-- Backdrop -->
+          <div class="absolute inset-0 bg-neo-black/60 backdrop-blur-[2px]" @click="showConfirmModal = false" />
+
+          <!-- Modal Card -->
+          <div class="relative w-full max-w-sm border-[3px] border-neo-black dark:border-white bg-white dark:bg-neo-dark-card shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_rgba(255,255,255,0.8)] overflow-hidden">
+            <div class="h-2 bg-neo-blue w-full" />
+            <div class="absolute top-2 right-0 w-12 h-12 bg-neo-black dark:bg-white border-l-[3px] border-b-[3px] border-neo-black dark:border-white" />
+
+            <!-- Body -->
+            <div class="p-8 text-center">
+              <!-- Icon box -->
+              <div class="mx-auto mb-5 w-20 h-20 bg-neo-yellow border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] flex items-center justify-center">
+                <span class="material-symbols-outlined text-neo-black text-4xl" style="font-variation-settings: 'FILL' 1;">how_to_vote</span>
+              </div>
+
+              <!-- Label chip -->
+              <div class="inline-block mb-3 px-3 py-0.5 bg-neo-black dark:bg-white text-white dark:text-neo-black font-heading font-black text-[10px] uppercase tracking-[0.25em]">
+                KONFIRMASI PILIHANMU
+              </div>
+
+              <!-- Title -->
+              <h3 class="font-heading font-black text-xl uppercase leading-tight mb-2 dark:text-white">
+                {{ selectedCandidateName }}
+              </h3>
+
+              <!-- Divider -->
+              <div class="mx-auto mb-4 w-12 h-[3px] bg-neo-blue" />
+
+              <!-- Body text -->
+              <p class="font-body text-sm text-neo-grey dark:text-gray-400 mb-7 leading-relaxed font-bold">
+                Pilihan ini tidak dapat diubah setelah Anda mengirimkannya!
+              </p>
+
+              <!-- CTA Buttons -->
+              <div class="flex gap-3">
+                <button
+                  @click="showConfirmModal = false"
+                  class="flex-1 py-3 px-2 bg-white dark:bg-neo-dark-surface text-neo-black dark:text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
+                >
+                  BATAL
+                </button>
+                <button
+                  @click="executeVote"
+                  class="flex-1 py-3 px-2 bg-neo-blue text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
+                >
+                  YA, KIRIM!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </AuthenticatedLayout>
 </template>
 
 <script setup>
+import { ref, computed, onMounted } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { useForm } from '@inertiajs/vue3';
-import Swal from 'sweetalert2';
+import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
   user: Object,
@@ -103,27 +243,65 @@ const props = defineProps({
   candidates: Array,
 });
 
+const readCandidates = ref([]);
+const showConfirmModal = ref(false);
 const form = useForm({ candidate_id: null });
 
-const submitVote = () => {
-  if (!form.candidate_id) return;
-  const chosen = props.candidates.find(c => c.id === form.candidate_id);
-
-  Swal.fire({
-    title: 'KONFIRMASI PILIHANMU',
-    html: `<p style="font-family:'Space Grotesk';font-weight:800;font-size:18px;text-transform:uppercase">${chosen?.name || 'Kandidat'}</p><p style="font-family:'Work Sans';margin-top:8px;color:#555">Pilihan ini tidak dapat diubah!</p>`,
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#0048FF',
-    cancelButtonColor: '#FF3C3C',
-    confirmButtonText: 'YA, KIRIM!',
-    cancelButtonText: 'BATAL',
-    background: '#FFFFFF',
-    customClass: { popup: 'border-[3px] border-black shadow-[4px_4px_0px_#000]', confirmButton: 'font-bold uppercase tracking-wider', cancelButton: 'font-bold uppercase tracking-wider' },
-  }).then((result) => {
-    if (result.isConfirmed) {
-      form.post(route('vote.store'));
+onMounted(() => {
+  if (props.activeElection) {
+    const stored = localStorage.getItem('read_candidates_' + props.activeElection.id);
+    if (stored) {
+      try {
+        readCandidates.value = JSON.parse(stored);
+      } catch(e) {}
     }
-  });
+  }
+
+  // Handle auto-scroll if requested
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('scroll') === 'vote-form') {
+    setTimeout(() => {
+      document.getElementById('vote-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 400);
+  }
+});
+
+const hasRead = (id) => readCandidates.value.includes(id);
+const allRead = computed(() => props.candidates?.every(c => hasRead(c.id)));
+
+const selectedCandidateName = computed(() => {
+  const chosen = props.candidates?.find(c => c.id === form.candidate_id);
+  return chosen ? chosen.name : 'Kandidat';
+});
+
+const submitVote = () => {
+  if (allRead.value && form.candidate_id) {
+    showConfirmModal.value = true;
+  }
+};
+
+const executeVote = () => {
+  showConfirmModal.value = false;
+  form.post(route('vote.store'));
+};
+
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+const scrollToCandidates = () => {
+  document.getElementById('candidates-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const scrollToVoteForm = () => {
+  document.getElementById('vote-form-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const markAllAsRead = () => {
+  if (props.candidates && props.activeElection) {
+    const ids = props.candidates.map(c => c.id);
+    readCandidates.value = ids;
+    localStorage.setItem('read_candidates_' + props.activeElection.id, JSON.stringify(ids));
+  }
 };
 </script>

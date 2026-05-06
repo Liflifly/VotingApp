@@ -40,16 +40,33 @@
             Geser &amp; scroll untuk menyesuaikan posisi
           </p>
 
-          <!-- Zoom Slider -->
+          <!-- Zoom Controls -->
           <div class="neo-crop-controls">
-            <span class="material-symbols-outlined text-zinc-400 text-lg">zoom_out</span>
+            <span class="material-symbols-outlined text-zinc-400 text-lg select-none">zoom_out</span>
             <input
               type="range" min="0" max="100" step="1"
               v-model.number="zoomPercent"
               @input="onSliderChange"
               class="neo-crop-slider"
             />
-            <span class="material-symbols-outlined text-zinc-400 text-lg">zoom_in</span>
+            <span class="material-symbols-outlined text-zinc-400 text-lg select-none">zoom_in</span>
+          </div>
+
+          <!-- Rotation Controls -->
+          <div class="neo-crop-rotation-controls">
+            <span class="material-symbols-outlined text-zinc-400 text-lg select-none">rotate_left</span>
+            <div class="relative flex-1 flex items-center">
+              <input
+                type="range" min="-180" max="180" step="1"
+                v-model.number="rotation"
+                @input="onRotationSliderChange"
+                class="neo-crop-rotation-slider"
+              />
+              <!-- Subtle Center Tick for 0 degrees -->
+              <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[3px] h-[10px] bg-zinc-600 pointer-events-none rounded-full"></div>
+            </div>
+            <span class="material-symbols-outlined text-zinc-400 text-lg select-none">rotate_right</span>
+            <span class="font-heading font-black text-[10px] text-zinc-400 w-10 text-right select-none">{{ rotation >= 0 ? '+' : '' }}{{ rotation }}°</span>
           </div>
 
           <!-- Actions -->
@@ -89,9 +106,11 @@ const canvasRef   = ref(null);
 const errorMsg    = ref(null);
 const processing  = ref(false);
 const zoomPercent = ref(0);
+const rotation    = ref(0); // Degrees: 0, 90, 180, 270
 
 // ── Internal state ────────────────────────────────────────────────────────────
-let img       = null;   // HTMLImageElement
+let img       = null;   // HTMLImageElement (original image)
+let activeSource = null; // HTMLImageElement or HTMLCanvasElement (rotated source)
 let ctx       = null;   // CanvasRenderingContext2D
 let canvasSize = 0;     // px (square)
 
@@ -113,12 +132,17 @@ let lastPinchDist = 0;
 
 const ZOOM_MULT = 4;
 
+// Helper to get image or canvas width/height
+const getImgWidth = (src) => src ? (src.naturalWidth || src.width) : 0;
+const getImgHeight = (src) => src ? (src.naturalHeight || src.height) : 0;
+
 // ── Watch show → init ─────────────────────────────────────────────────────────
 watch(() => props.show, async (val) => {
   if (val && props.imageSrc) {
     errorMsg.value = null;
     processing.value = false;
     zoomPercent.value = 0;
+    rotation.value = 0;
     await nextTick();
     // Extra frame to ensure DOM is painted
     requestAnimationFrame(() => {
@@ -142,19 +166,8 @@ function loadImage() {
 
   img = new Image();
   img.onload = () => {
-    // Calculate fit scale — image must COVER the canvas (fill, not fit)
-    const scaleX = canvasSize / img.naturalWidth;
-    const scaleY = canvasSize / img.naturalHeight;
-    minScale = Math.max(scaleX, scaleY);
-    maxScale = minScale * ZOOM_MULT;
-    scale = minScale;
-
-    // Center the image
-    offsetX = (canvasSize - img.naturalWidth * scale) / 2;
-    offsetY = (canvasSize - img.naturalHeight * scale) / 2;
-
-    zoomPercent.value = 0;
-    draw();
+    rotation.value = 0;
+    updateActiveSource();
   };
   img.onerror = () => {
     errorMsg.value = 'Gagal memuat gambar. Coba file lain.';
@@ -162,9 +175,65 @@ function loadImage() {
   img.src = props.imageSrc;
 }
 
+// ── Rotate Logic ──────────────────────────────────────────────────────────────
+function getRotatedImageSource(originalImg, angleDegrees) {
+  if (!originalImg) return null;
+  if (angleDegrees === 0) return originalImg;
+  
+  const canvas = document.createElement('canvas');
+  const ctxRot = canvas.getContext('2d');
+  
+  const angleRad = (angleDegrees * Math.PI) / 180;
+  const absCos = Math.abs(Math.cos(angleRad));
+  const absSin = Math.abs(Math.sin(angleRad));
+  
+  const origW = originalImg.naturalWidth;
+  const origH = originalImg.naturalHeight;
+  
+  // Bounding box size for arbitrary rotation
+  const newW = Math.round(origW * absCos + origH * absSin);
+  const newH = Math.round(origW * absSin + origH * absCos);
+  
+  canvas.width  = newW;
+  canvas.height = newH;
+  
+  ctxRot.translate(canvas.width / 2, canvas.height / 2);
+  ctxRot.rotate(angleRad);
+  ctxRot.drawImage(originalImg, -origW / 2, -origH / 2);
+  
+  return canvas;
+}
+
+function updateActiveSource() {
+  if (!img) return;
+  
+  activeSource = getRotatedImageSource(img, rotation.value);
+  const srcW = getImgWidth(activeSource);
+  const srcH = getImgHeight(activeSource);
+  
+  // Calculate fit scale — image must COVER the canvas (fill, not fit)
+  const scaleX = canvasSize / srcW;
+  const scaleY = canvasSize / srcH;
+  minScale = Math.max(scaleX, scaleY);
+  maxScale = minScale * ZOOM_MULT;
+  
+  // Maintain current zoom level proportionately
+  scale = minScale + (zoomPercent.value / 100) * (maxScale - minScale);
+
+  // Center the image
+  offsetX = (canvasSize - srcW * scale) / 2;
+  offsetY = (canvasSize - srcH * scale) / 2;
+
+  draw();
+}
+
+function onRotationSliderChange() {
+  updateActiveSource();
+}
+
 // ── Draw frame ────────────────────────────────────────────────────────────────
 function draw() {
-  if (!ctx || !img) return;
+  if (!ctx || !activeSource) return;
   const s = canvasSize;
 
   // Clear
@@ -172,10 +241,10 @@ function draw() {
 
   // Draw scaled image
   ctx.drawImage(
-    img,
+    activeSource,
     offsetX, offsetY,
-    img.naturalWidth * scale,
-    img.naturalHeight * scale
+    getImgWidth(activeSource) * scale,
+    getImgHeight(activeSource) * scale
   );
 
   // Dark overlay mask
@@ -231,8 +300,9 @@ function draw() {
 
 // ── Clamp offsets ─────────────────────────────────────────────────────────────
 function clampOffset() {
-  const imgW = img.naturalWidth * scale;
-  const imgH = img.naturalHeight * scale;
+  if (!activeSource) return;
+  const imgW = getImgWidth(activeSource) * scale;
+  const imgH = getImgHeight(activeSource) * scale;
 
   // Image must cover the entire canvas — no gap allowed
   // Max offset (image left/top edge can't go past canvas left/top)
@@ -271,7 +341,7 @@ function onPointerUp(e) {
 
 // ── Wheel zoom ────────────────────────────────────────────────────────────────
 function onWheel(e) {
-  if (!img) return;
+  if (!activeSource) return;
   const delta = e.deltaY > 0 ? -0.04 : 0.04;
   zoomBy(delta, e.offsetX, e.offsetY);
 }
@@ -297,7 +367,7 @@ function syncSlider() {
 
 // ── Slider → zoom ─────────────────────────────────────────────────────────────
 function onSliderChange() {
-  if (!img) return;
+  if (!activeSource) return;
   const oldScale = scale;
   scale = minScale + (zoomPercent.value / 100) * (maxScale - minScale);
 
@@ -353,7 +423,7 @@ function pinchDist(e) {
 
 // ── Crop & emit ───────────────────────────────────────────────────────────────
 function doCrop() {
-  if (!img || processing.value) return;
+  if (!activeSource || processing.value) return;
   errorMsg.value = null;
   processing.value = true;
 
@@ -370,7 +440,7 @@ function doCrop() {
     const ratio = outSize / canvasSize;
 
     outCtx.drawImage(
-      img,
+      activeSource,
       // Source: map from canvas coords back to image coords
       -offsetX / scale,
       -offsetY / scale,
@@ -479,8 +549,54 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1.25rem;
+  padding: 0.85rem 1.25rem;
   border-top: 2px solid #3f3f46;
+}
+
+.neo-crop-rotation-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.25rem;
+  border-top: 1px dashed #27272a;
+  background: #121214;
+}
+
+.neo-crop-rotation-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #27272a;
+  outline: none;
+  cursor: pointer;
+  border: 1px solid #3f3f46;
+}
+.neo-crop-rotation-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 10px;
+  height: 18px;
+  background: #FF3C3C; /* Bright Red thumb to make it visually distinct */
+  border: 1.5px solid #000;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.neo-crop-rotation-slider::-webkit-slider-thumb:hover {
+  transform: scaleY(1.15);
+  background: #ff5252;
+}
+.neo-crop-rotation-slider::-moz-range-thumb {
+  width: 10px;
+  height: 18px;
+  background: #FF3C3C;
+  border: 1.5px solid #000;
+  cursor: pointer;
+  border-radius: 0px;
+  transition: transform 0.1s;
+}
+.neo-crop-rotation-slider::-moz-range-thumb:hover {
+  transform: scaleY(1.15);
+  background: #ff5252;
 }
 
 .neo-crop-slider {

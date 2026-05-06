@@ -15,7 +15,7 @@
 
     <!-- SIDEBAR -->
     <aside :class="[
-      'fixed inset-y-0 left-0 bg-white dark:bg-neo-dark-card border-r-neo border-neo-black dark:border-white z-50 flex flex-col transition-all duration-300 ease-in-out shadow-neo dark:shadow-neo-white',
+      'fixed top-0 left-0 h-[100dvh] bg-white dark:bg-neo-dark-card border-r-neo border-neo-black dark:border-white z-50 flex flex-col transition-all duration-300 ease-in-out shadow-neo dark:shadow-neo-white',
       sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       sidebarCollapsed ? 'w-[68px]' : 'w-[260px]'
     ]">
@@ -33,7 +33,7 @@
       <!-- NEW NEO-BRUTALIST SIDEBAR TOGGLE HANDLE -->
       <button
         @click="toggleSidebar()"
-        class="hidden lg:flex absolute -right-4 top-24 w-8 h-12 bg-neo-yellow border-neo border-neo-black dark:border-white z-50 items-center justify-center shadow-neo hover:shadow-neo-hover hover:-translate-x-1 transition-all group"
+        class="hidden lg:flex absolute -right-4 top-24 w-8 h-12 bg-neo-yellow border-neo border-neo-black dark:border-white z-50 items-center justify-center shadow-neo hover:shadow-neo-hover hover:-translate-x-1 transition-all group focus:outline-none"
       >
         <span class="material-symbols-outlined font-black transition-transform duration-300 group-hover:scale-110" :style="{ transform: sidebarCollapsed ? 'rotate(180deg)' : 'rotate(0deg)' }">
           chevron_left
@@ -72,7 +72,7 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-auto neo-scrollbar px-2 mt-3 space-y-1">
+      <nav class="flex-1 overflow-y-scroll neo-scrollbar px-2 mt-3 space-y-1 pb-4" style="-webkit-overflow-scrolling: touch;">
         <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label dark:text-gray-400 px-1">MENU UTAMA</div>
 
         <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')" icon="grid_view" label="Dashboard" :collapsed="sidebarCollapsed" />
@@ -140,8 +140,10 @@
               <span class="material-symbols-outlined text-base">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
             </button>
             <div class="flex items-center gap-2">
-              <span class="w-2 h-2 bg-neo-yellow animate-pulse"></span>
-              <span class="font-heading text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">SISTEM AKTIF</span>
+              <span :class="['w-2 h-2', $page.props.activeElection ? 'bg-neo-yellow animate-pulse' : 'bg-gray-500']"></span>
+              <span class="font-heading text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">
+                {{ $page.props.activeElection ? 'PEMILIHAN AKTIF' : 'PEMILIHAN TIDAK AKTIF' }}
+              </span>
             </div>
             <div class="font-heading text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">KOSGORO&#8482;</div>
           </div>
@@ -159,12 +161,12 @@
         </div>
       </header>
 
-      <!-- Ticker Bar (Desktop only) -->
-      <div class="neo-ticker-bar hidden lg:block">
+      <!-- Ticker Bar -->
+      <div class="neo-ticker-bar block">
         <div class="neo-ticker-content">
           <template v-for="n in 3" :key="n">
             <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>KOSGORO&#8482; VOTING SYSTEM</span>
-            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>ARENA PEMILIHAN AKTIF</span>
+            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>PERIODE PEMILIHAN AKTIF</span>
             <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>SUARAMU MENENTUKAN PEMIMPIN</span>
             <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>TRANSPARANSI ABSOLUT</span>
           </template>
@@ -187,13 +189,34 @@
       </footer>
     </div>
 
+    <!-- Scroll to Top Button -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-4 scale-75"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition-opacity duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <button 
+        v-show="showScrollTop"
+        @click="scrollToTop"
+        class="fixed z-[9999] bg-neo-yellow text-neo-black border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:bg-neo-blue hover:text-white hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-300 flex items-center justify-center focus:outline-none"
+        :class="isAtBottom ? 'bottom-6 left-[calc(50%-4rem)] w-32 h-10 rounded-none px-3 gap-1.5' : 'bottom-6 left-[calc(100%-4.5rem)] w-12 h-12 hover:translate-x-[1.5px] hover:translate-y-[1.5px]'"
+        aria-label="Scroll to top"
+      >
+        <span v-if="isAtBottom" class="whitespace-nowrap font-heading font-black tracking-wider text-[11px] select-none">KE ATAS</span>
+        <span class="material-symbols-outlined font-bold text-xl">arrow_upward</span>
+      </button>
+    </Transition>
+
     <!-- Toasts Layer -->
     <NeoToast />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import SidebarLink from '@/Components/SidebarLink.vue';
 import NeoToast from '@/Components/NeoToast.vue';
@@ -219,7 +242,52 @@ const toggleSidebar = () => {
   }
 };
 
-router.on('navigate', () => { sidebarOpen.value = false; });
+const showScrollTop = ref(false);
+const isAtBottom = ref(false);
+const isScrollingToTop = ref(false);
+
+const handleScroll = () => {
+  if (isScrollingToTop.value) return;
+
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  showScrollTop.value = scrollTop > 300;
+
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  
+  // Jika scroll sudah mendekati bawah (misal toleransi 35px)
+  isAtBottom.value = (scrollTop + clientHeight) >= (scrollHeight - 45);
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
+
+const scrollToTop = () => {
+  isScrollingToTop.value = true;
+  showScrollTop.value = false;
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  setTimeout(() => {
+    isScrollingToTop.value = false;
+    isAtBottom.value = false;
+  }, 800);
+};
+
+router.on('navigate', () => { 
+  sidebarOpen.value = false; 
+  showScrollTop.value = false; // Reset on navigation
+  isAtBottom.value = false;
+  isScrollingToTop.value = false;
+});
 
 const page = usePage();
 const user = computed(() => page.props.auth?.user);

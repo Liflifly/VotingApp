@@ -83,7 +83,7 @@
         <!-- Brand -->
         <div class="text-center mt-6 md:mt-8">
           <div class="font-heading font-black text-xl text-neo-black tracking-tight">KOSGORO<span class="text-neo-blue">™</span></div>
-          <div class="font-heading text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-0.5">ESTABLISHED 2026 • DIGITAL ARENA</div>
+          <div class="font-heading text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-0.5">ESTABLISHED 2026 • DIGITAL VOTING SYSTEM</div>
         </div>
       </div>
     </div>

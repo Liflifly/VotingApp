@@ -52,7 +52,8 @@ class ProfileController extends Controller
     public function updateAvatar(Request $request): RedirectResponse
     {
         $request->validate([
-            'image' => ['required', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'image'          => ['required', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:4096'],
+            'original_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif', 'max:8192'],
         ]);
 
         $user = $request->user();
@@ -62,16 +63,56 @@ class ProfileController extends Controller
             Storage::disk('public')->delete($user->avatar);
         }
 
-        // Store the new file → avatars/{userId}_{timestamp}.{ext}
+        // Store the new cropped file → avatars/{userId}_{timestamp}.{ext}
         $extension = $request->file('image')->extension() ?: 'jpg';
-        $filename  = $user->id . '_' . time() . '.' . $extension;
+        $timestamp = time();
+        $filename  = $user->id . '_' . $timestamp . '.' . $extension;
         $path      = $request->file('image')->storeAs('avatars', $filename, 'public');
 
-        // Persist to DB — column is `avatar`, NOT `photo`
         $user->avatar = $path;
+
+        // Store the original uncropped file if provided
+        if ($request->hasFile('original_image')) {
+            if ($user->avatar_original && Storage::disk('public')->exists($user->avatar_original)) {
+                Storage::disk('public')->delete($user->avatar_original);
+            }
+
+            $origExtension = $request->file('original_image')->extension() ?: 'jpg';
+            $origFilename  = $user->id . '_' . $timestamp . '_original.' . $origExtension;
+            $origPath      = $request->file('original_image')->storeAs('avatars', $origFilename, 'public');
+            
+            $user->avatar_original = $origPath;
+        }
+
         $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'avatar-updated');
+    }
+
+    /**
+     * Delete the user's avatar photo.
+     */
+    public function deleteAvatar(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->avatar) {
+            if (Storage::disk('public')->exists($user->avatar)) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = null;
+        }
+
+        if ($user->avatar_original) {
+            if (Storage::disk('public')->exists($user->avatar_original)) {
+                Storage::disk('public')->delete($user->avatar_original);
+            }
+            $user->avatar_original = null;
+        }
+
+        $user->save();
+
+        return Redirect::route('profile.edit')->with('status', 'avatar-deleted');
     }
 
     /**

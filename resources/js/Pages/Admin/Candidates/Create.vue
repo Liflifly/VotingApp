@@ -1,12 +1,25 @@
 <template>
   <AuthenticatedLayout title="TAMBAH KANDIDAT">
     <div class="max-w-2xl">
+      <!-- Breadcrumb Navigation -->
+      <div class="mb-5 flex">
+        <Link 
+          :href="route('admin.candidates.index', election.id)" 
+          class="inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white font-heading text-[10px] md:text-xs font-black uppercase tracking-wider text-neo-black dark:text-white shadow-[3px_3px_0px_#000] dark:shadow-[3px_3px_0px_rgba(255,255,255,0.8)] hover:bg-neo-yellow dark:hover:bg-neo-yellow hover:text-neo-black dark:hover:text-neo-black hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0px_#000] dark:hover:shadow-[1.5px_1.5px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-100 group"
+        >
+          <span class="material-symbols-outlined text-base font-bold group-hover:-translate-x-1 transition-transform text-neo-blue">arrow_back</span>
+          KEMBALI KE KELOLA KANDIDAT
+        </Link>
+      </div>
+
       <!-- Header -->
-      <div class="neo-page-header bg-white shadow-neo mb-6">
+      <div class="neo-page-header bg-white dark:bg-neo-dark-card mb-6 shadow-neo dark:shadow-neo-white relative overflow-hidden p-6 border-3 border-neo-black dark:border-white">
         <div class="absolute top-0 right-0 w-12 h-12 bg-neo-blue/10 border-l-2 border-b-2 border-neo-blue/20"></div>
         <div class="relative z-10 flex items-center gap-3">
-          <Link :href="route('admin.candidates.index', election.id)" class="neo-btn-secondary text-[10px] py-1.5 px-3 shadow-neo-sm">← KEMBALI</Link>
-          <h1 class="font-heading font-black text-lg md:text-h1 uppercase">TAMBAH KANDIDAT</h1>
+          <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">person_add</span>
+          <h1 class="font-heading font-black text-xl uppercase dark:text-white">
+            TAMBAH KANDIDAT
+          </h1>
         </div>
       </div>
 

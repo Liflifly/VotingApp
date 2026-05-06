@@ -1,5 +1,5 @@
 <template>
-  <GuestLayout title="DAFTAR AKUN" subtitle="Buat akun baru untuk memasuki arena pemilihan.">
+  <GuestLayout title="DAFTAR AKUN" subtitle="Buat akun baru untuk mengakses sistem pemilihan.">
     <form @submit.prevent="submit" class="space-y-4">
       <!-- Name -->
       <div>
@@ -44,7 +44,7 @@
 
       <!-- Submit -->
       <button type="submit" :disabled="form.processing" class="neo-btn-primary w-full py-4 text-base mt-2" :class="{ 'opacity-50 cursor-not-allowed': form.processing }">
-        DAFTAR & MASUK ARENA →
+        DAFTAR & MASUK SISTEM →
       </button>
 
       <!-- Login Link -->

@@ -23,12 +23,44 @@
           <div class="relative group w-32 h-32 mx-auto mb-4">
             <div class="w-full h-full bg-neo-blue border-neo border-neo-black dark:border-white shadow-neo dark:shadow-neo-white flex items-center justify-center overflow-hidden rounded-full">
               <img v-if="user.avatar" :src="user.avatar" class="w-full h-full object-cover" />
-              <span v-else class="material-symbols-outlined text-white text-6xl">person</span>
+              <div v-else class="relative w-full h-full flex items-center justify-center">
+                <span class="material-symbols-outlined text-gray-400 text-7xl select-none">person</span>
+                <span class="absolute material-symbols-outlined text-white text-3xl select-none font-bold filter drop-shadow-[2px_2px_0px_rgba(0,0,0,1)]">add_a_photo</span>
+              </div>
             </div>
-            <label class="absolute inset-0 rounded-full flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+            <label class="absolute inset-0 rounded-full flex items-center justify-center cursor-pointer transition-colors duration-200"
+              :class="user.avatar ? 'bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity' : 'bg-black/0 group-hover:bg-black/35'"
+            >
               <input type="file" class="hidden" accept="image/*" @change="onFileChange" ref="fileInputRef" />
-              <span class="material-symbols-outlined text-white text-3xl">add_a_photo</span>
+              <span v-if="user.avatar" class="material-symbols-outlined text-white text-3xl">add_a_photo</span>
             </label>
+          </div>
+
+          <!-- Avatar Control Buttons -->
+          <div v-if="user.avatar" class="mb-4 space-y-2 max-w-[240px] mx-auto">
+            <!-- Upload Foto Baru Button -->
+            <button @click="triggerFileSelect" class="neo-btn bg-neo-blue text-white w-full py-1.5 px-3 text-[10px] flex items-center justify-center gap-1 shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] font-heading font-black uppercase">
+              <span class="material-symbols-outlined text-[14px]">upload_file</span>
+              PILIH FOTO BARU
+            </button>
+            
+            <!-- Edit & Hapus Buttons Row -->
+            <div class="flex gap-2">
+              <button @click="editExistingAvatar" class="neo-btn bg-neo-yellow text-neo-black flex-1 py-1.5 px-2 text-[10px] flex items-center justify-center gap-1 shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] font-heading font-black">
+                <span class="material-symbols-outlined text-[14px]">crop_rotate</span>
+                EDIT FOTO
+              </button>
+              <button @click="promptDeleteAvatar" class="neo-btn-danger flex-1 py-1.5 px-2 text-[10px] flex items-center justify-center gap-1 shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] font-heading font-black">
+                <span class="material-symbols-outlined text-[14px]">delete</span>
+                HAPUS FOTO
+              </button>
+            </div>
+          </div>
+          <div v-else class="mb-4 max-w-[240px] mx-auto">
+            <button @click="triggerFileSelect" class="neo-btn bg-neo-blue text-white w-full py-1.5 px-3 text-[10px] flex items-center justify-center gap-1 shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] font-heading font-black uppercase">
+              <span class="material-symbols-outlined text-[14px]">upload_file</span>
+              PILIH FOTO
+            </button>
           </div>
 
           <div class="font-heading font-black text-lg uppercase truncate mb-1 dark:text-white">{{ user.name }}</div>
@@ -60,9 +92,11 @@
             </div>
           </div>
 
-          <div v-if="$page.props.flash?.status === 'avatar-updated'" class="mt-4 p-3 bg-green-100 dark:bg-green-900/30 border-2 border-green-500 flex items-center gap-2">
+          <div v-if="$page.props.flash?.status === 'avatar-updated' || $page.props.flash?.status === 'avatar-deleted'" class="mt-4 p-3 bg-green-100 dark:bg-green-900/30 border-2 border-green-500 flex items-center gap-2">
             <span class="material-symbols-outlined text-green-600 text-lg">check_circle</span>
-            <span class="font-heading text-xs font-bold uppercase text-green-700 dark:text-green-400">Foto berhasil diperbarui!</span>
+            <span class="font-heading text-xs font-bold uppercase text-green-700 dark:text-green-400">
+              {{ $page.props.flash?.status === 'avatar-deleted' ? 'Foto berhasil dihapus!' : 'Foto berhasil diperbarui!' }}
+            </span>
           </div>
         </div>
       </div>
@@ -234,6 +268,89 @@
       </Transition>
     </Teleport>
 
+    <!-- ═══ NEO DELETE AVATAR ALERT MODAL ═══ -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="opacity-0 scale-95 translate-y-4"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-95 translate-y-4"
+      >
+        <div v-if="showDeleteAlert" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+          <!-- Backdrop -->
+          <div
+            class="absolute inset-0 bg-neo-black/60 backdrop-blur-[2px]"
+            @click="showDeleteAlert = false"
+          />
+
+          <!-- Modal Card -->
+          <div class="relative w-full max-w-sm border-[3px] border-neo-black dark:border-white bg-white dark:bg-neo-dark-card shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_rgba(255,255,255,0.8)] overflow-hidden">
+
+            <!-- Top accent bar -->
+            <div class="h-2 bg-neo-red w-full" />
+
+            <!-- Corner decoration -->
+            <div class="absolute top-2 right-0 w-12 h-12 bg-neo-black dark:bg-white border-l-[3px] border-b-[3px] border-neo-black dark:border-white" />
+
+            <!-- Body -->
+            <div class="p-8 text-center">
+
+              <!-- Icon box -->
+              <div class="mx-auto mb-5 w-20 h-20 bg-neo-red border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] flex items-center justify-center">
+                <span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">delete_forever</span>
+              </div>
+
+              <!-- Label chip -->
+              <div class="inline-block mb-3 px-3 py-0.5 bg-neo-black dark:bg-white text-white dark:text-neo-black font-heading font-black text-[10px] uppercase tracking-[0.25em]">
+                KONFIRMASI TINDAKAN
+              </div>
+
+              <!-- Title -->
+              <h3 class="font-heading font-black text-xl uppercase leading-tight mb-2 dark:text-white">
+                HAPUS FOTO<br/>PROFIL?
+              </h3>
+
+              <!-- Divider -->
+              <div class="mx-auto mb-4 w-12 h-[3px] bg-neo-red" />
+
+              <!-- Body text -->
+              <p class="font-body text-sm text-neo-grey dark:text-gray-400 mb-7 leading-relaxed">
+                Tindakan ini tidak dapat dibatalkan. Foto profil Anda akan dihapus secara permanen dari sistem.
+              </p>
+
+              <!-- CTA Buttons -->
+              <div class="flex gap-3">
+                <button
+                  @click="showDeleteAlert = false"
+                  class="flex-1 py-3 px-2 bg-white dark:bg-neo-dark-surface text-neo-black dark:text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
+                >
+                  <span class="material-symbols-outlined text-[14px]">close</span>
+                  BATAL
+                </button>
+                <button
+                  @click="confirmDeleteAvatar"
+                  class="flex-1 py-3 px-2 bg-neo-red text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
+                >
+                  <span class="material-symbols-outlined text-[14px]">delete</span>
+                  HAPUS
+                </button>
+              </div>
+            </div>
+
+            <!-- Bottom branding bar -->
+            <div class="px-5 py-2 bg-gray-50 dark:bg-neo-dark-surface border-t-[3px] border-neo-black dark:border-white flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-neo-grey dark:text-gray-500 text-sm">warning</span>
+              <span class="font-heading font-black text-[10px] uppercase tracking-[0.2em] text-neo-grey dark:text-gray-500">KOSGORO™ SYSTEM</span>
+            </div>
+          </div>
+
+        </div>
+      </Transition>
+    </Teleport>
+
   </AuthenticatedLayout>
 </template>
 
@@ -269,15 +386,22 @@ const updatePassword = () => passwordForm.put(route('password.update'), {
 });
 
 // ─── Cropper state ────────────────────────────────────────────────────────────
-const showCropModal = ref(false);
-const imageSrc      = ref(null);
-const fileInputRef  = ref(null);
+const showCropModal        = ref(false);
+const imageSrc             = ref(null);
+const fileInputRef         = ref(null);
+const selectedOriginalFile = ref(null); // Keep original file for high-res edit option
+
+// ─── Trigger File Selection programmatically ──────────────────────────────────
+const triggerFileSelect = () => {
+  fileInputRef.value?.click();
+};
 
 // ─── File picker → open cropper ───────────────────────────────────────────────
 const onFileChange = (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
   e.target.value = '';
+  selectedOriginalFile.value = file; // Preserve original file object
 
   const reader = new FileReader();
   reader.onload = (ev) => {
@@ -287,18 +411,51 @@ const onFileChange = (e) => {
   reader.readAsDataURL(file);
 };
 
+// ─── Edit existing avatar ─────────────────────────────────────────────────────
+const editExistingAvatar = () => {
+  if (!user.value.avatar) return;
+  // If the high-res original uncropped photo is stored, use it so they can re-crop/re-zoom!
+  imageSrc.value      = user.value.avatar_original || user.value.avatar;
+  showCropModal.value = true;
+};
+
 // ─── Receive cropped file → upload ────────────────────────────────────────────
 const onCropped = (file) => {
+  const data = { image: file };
+  if (selectedOriginalFile.value) {
+    data.original_image = selectedOriginalFile.value;
+  }
+
   router.post(
     route('profile.avatar.update'),
-    { image: file },
+    data,
     {
       forceFormData:  true,
       preserveScroll: true,
+      onSuccess: () => {
+        selectedOriginalFile.value = null; // Clear on success
+      },
       onError: (errors) => {
         console.error('Upload errors:', errors);
       },
     },
   );
+};
+
+// ─── Delete Avatar ────────────────────────────────────────────────────────────
+const showDeleteAlert = ref(false);
+
+const promptDeleteAvatar = () => {
+  showDeleteAlert.value = true;
+};
+
+const confirmDeleteAvatar = () => {
+  showDeleteAlert.value = false;
+  router.delete(route('profile.avatar.destroy'), {
+    preserveScroll: true,
+    onSuccess: () => {
+      // Flash message handled by backend
+    }
+  });
 };
 </script>

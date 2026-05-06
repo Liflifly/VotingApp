@@ -34,7 +34,7 @@
           </span>
           <span class="neo-ticker-item">
             <span class="neo-ticker-dot"></span>
-            ARENA PEMILIHAN AKTIF
+            PERIODE PEMILIHAN AKTIF
           </span>
           <span class="neo-ticker-item">
             <span class="neo-ticker-dot"></span>
@@ -58,9 +58,13 @@
 
       <div class="max-w-5xl mx-auto text-center relative z-10">
         <!-- Status Ticker -->
-        <div class="inline-flex items-center gap-2 neo-badge-live shadow-neo-sm mb-6 md:mb-8 neo-pulse">
+        <div v-if="activeElection" class="inline-flex items-center gap-2 neo-badge-live shadow-neo-sm mb-6 md:mb-8 neo-pulse">
           <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
           PEMILIHAN AKTIF
+        </div>
+        <div v-else class="inline-flex items-center gap-2 bg-gray-200 border-2 border-neo-black text-neo-grey px-4 py-1.5 shadow-neo-sm mb-6 md:mb-8 font-heading font-black text-xs md:text-sm uppercase tracking-wider">
+          <div class="w-2 h-2 bg-neo-grey rounded-full"></div>
+          BELUM ADA PEMILIHAN
         </div>
 
         <h1 class="font-heading font-black text-[36px] sm:text-[48px] md:text-display uppercase leading-[1.0] tracking-tight text-neo-black mb-4 md:mb-6">
@@ -70,12 +74,12 @@
         </h1>
 
         <p class="font-body text-base md:text-body-lg text-neo-grey max-w-2xl mx-auto mb-8 md:mb-10 px-2">
-          Arena pemilihan digital terkuat. Pilih kandidatmu, pantau pergerakan suara secara real-time, dan tentukan masa depan hari ini.
+          Sistem pemilihan digital terpercaya. Pilih kandidat Anda, pantau pergerakan suara secara real-time, dan tentukan masa depan hari ini.
         </p>
 
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
           <Link :href="route('login')" class="neo-btn-primary text-sm sm:text-base py-3 sm:py-4 px-8 sm:px-10 shadow-neo">
-            MASUK KE ARENA →
+            MASUK KE SISTEM →
           </Link>
           <Link :href="route('register')" class="neo-btn-secondary text-sm sm:text-base py-3 sm:py-4 px-8 sm:px-10 shadow-neo">
             DAFTAR BARU
@@ -91,11 +95,11 @@
     <section id="about" class="py-12 md:py-16 px-4 sm:px-6 neo-dotgrid">
       <div class="max-w-5xl mx-auto">
         <h2 class="font-heading font-black text-h2 md:text-h1 uppercase text-center mb-8 md:mb-12">
-          ARENA <span class="text-neo-blue">DALAM ANGKA</span>
+          SISTEM <span class="text-neo-blue">DALAM ANGKA</span>
         </h2>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
           <div class="neo-stat-card">
-            <div class="neo-stat-value text-neo-blue">10K+</div>
+            <div class="neo-stat-value text-neo-blue">{{ totalUsers || 0 }}</div>
             <div class="neo-stat-label">PEMILIH TERDAFTAR</div>
           </div>
           <div class="neo-stat-card">
@@ -161,7 +165,7 @@
             </div>
             <h3 class="font-heading font-black text-lg md:text-h2 uppercase mb-2">LEADERBOARD</h3>
             <p class="font-body text-sm md:text-body-md text-neo-grey">
-              Sistem ranking kandidat bergaya turnamen. Lihat siapa yang mendominasi arena pemilihan.
+              Sistem pemeringkatan kandidat terintegrasi. Lihat siapa yang memimpin dalam periode pemilihan.
             </p>
           </div>
         </div>
@@ -241,15 +245,41 @@
         </div>
       </div>
     </footer>
+    <!-- Scroll to Top Button -->
+    <Transition
+      enter-active-class="transition-all duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-4 scale-75"
+      enter-to-class="opacity-100 translate-y-0 scale-100"
+      leave-active-class="transition-opacity duration-200 ease-in"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <button 
+        v-show="showScrollTop"
+        @click="scrollToTop"
+        class="fixed z-[9999] bg-neo-yellow text-neo-black border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:bg-neo-blue hover:text-white hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-300 flex items-center justify-center focus:outline-none"
+        :class="isAtBottom ? 'bottom-6 left-[calc(50%-4rem)] w-32 h-10 rounded-none px-3 gap-1.5' : 'bottom-6 left-[calc(100%-4.5rem)] w-12 h-12 hover:translate-x-[1.5px] hover:translate-y-[1.5px]'"
+        aria-label="Scroll to top"
+      >
+        <span v-if="isAtBottom" class="whitespace-nowrap font-heading font-black tracking-wider text-[11px] select-none">KE ATAS</span>
+        <span class="material-symbols-outlined font-bold text-xl">arrow_upward</span>
+      </button>
+    </Transition>
+
     <NeoToast />
   </div>
 </template>
 
 <script setup>
-import { Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { Link, router } from '@inertiajs/vue3';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import NeoToast from '@/Components/NeoToast.vue';
 import { useDarkMode } from '@/Composables/useDarkMode.js';
+
+const props = defineProps({
+  activeElection: Object,
+  totalUsers: Number,
+});
 
 const { isDark, toggle: toggleDark } = useDarkMode();
 const openFaq = ref(null);
@@ -280,4 +310,49 @@ const faqs = [
     a: 'Gunakan fitur "Lupa Password" di halaman login untuk mereset password melalui email yang terdaftar. Jika masih bermasalah, hubungi admin sekolah.'
   },
 ];
+
+const showScrollTop = ref(false);
+const isAtBottom = ref(false);
+const isScrollingToTop = ref(false);
+
+const handleScroll = () => {
+  if (isScrollingToTop.value) return;
+
+  const scrollTop = window.scrollY || document.documentElement.scrollTop;
+  showScrollTop.value = scrollTop > 300;
+
+  const scrollHeight = document.documentElement.scrollHeight;
+  const clientHeight = window.innerHeight;
+  
+  isAtBottom.value = (scrollTop + clientHeight) >= (scrollHeight - 45);
+};
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScroll);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScroll);
+});
+
+const scrollToTop = () => {
+  isScrollingToTop.value = true;
+  showScrollTop.value = false;
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  setTimeout(() => {
+    isScrollingToTop.value = false;
+    isAtBottom.value = false;
+  }, 800);
+};
+
+router.on('navigate', () => { 
+  showScrollTop.value = false;
+  isAtBottom.value = false;
+  isScrollingToTop.value = false;
+});
 </script>

@@ -27,10 +27,14 @@ class HandleInertiaRequests extends Middleware
                     'avatar' => $request->user()->avatar
                         ? '/storage/' . $request->user()->avatar
                         : null,
+                    'avatar_original' => $request->user()->avatar_original
+                        ? '/storage/' . $request->user()->avatar_original
+                        : null,
                     'role' => $request->user()->role,
                     'has_voted' => $request->user()->has_voted ?? false,
                 ] : null,
             ],
+            'activeElection' => \App\Models\Election::active()->first(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
