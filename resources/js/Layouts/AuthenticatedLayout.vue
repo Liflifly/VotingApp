@@ -202,7 +202,7 @@
         v-show="showScrollTop"
         @click="scrollToTop"
         class="fixed z-[9999] bg-neo-yellow text-neo-black border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:bg-neo-blue hover:text-white hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-300 flex items-center justify-center focus:outline-none"
-        :class="isAtBottom ? 'bottom-6 left-[calc(50%-4rem)] w-32 h-10 rounded-none px-3 gap-1.5' : 'bottom-6 left-[calc(100%-4.5rem)] w-12 h-12 hover:translate-x-[1.5px] hover:translate-y-[1.5px]'"
+        :class="isAtBottom ? 'bottom-28 left-[calc(50%-4rem)] w-32 h-10 rounded-none px-3 gap-1.5' : 'bottom-28 left-[calc(100%-4.5rem)] w-12 h-12 hover:translate-x-[1.5px] hover:translate-y-[1.5px]'"
         aria-label="Scroll to top"
       >
         <span v-if="isAtBottom" class="whitespace-nowrap font-heading font-black tracking-wider text-[11px] select-none">KE ATAS</span>
