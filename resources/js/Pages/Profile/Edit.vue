@@ -75,6 +75,15 @@
             <span class="material-symbols-outlined text-neo-blue">badge</span> INFORMASI DASAR
           </h2>
           <form @submit.prevent="updateProfile">
+            <div v-if="profileForm.errors.name || profileForm.errors.email" class="bg-neo-red border-neo border-neo-black p-4 mb-6 shadow-neo animate-in fade-in slide-in-from-top-4 duration-300">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-white font-bold">warning</span>
+                <p class="font-heading text-xs font-bold text-white uppercase tracking-wider">
+                  {{ profileForm.errors.name || profileForm.errors.email }}
+                </p>
+              </div>
+            </div>
+
             <div class="grid md:grid-cols-2 gap-5 mb-6">
               <div>
                 <label class="block font-heading text-xs font-bold uppercase tracking-wider mb-2 dark:text-gray-300">NAMA LENGKAP</label>
@@ -103,6 +112,15 @@
             <span class="material-symbols-outlined text-neo-yellow">lock</span> GANTI PASSWORD
           </h2>
           <form @submit.prevent="updatePassword">
+            <div v-if="passwordForm.hasErrors" class="bg-neo-red border-neo border-neo-black p-4 mb-6 shadow-neo animate-in fade-in slide-in-from-top-4 duration-300">
+              <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-white font-bold">warning</span>
+                <p class="font-heading text-xs font-bold text-white uppercase tracking-wider">
+                  {{ passwordForm.errors.current_password || passwordForm.errors.password || passwordForm.errors.password_confirmation || 'Terjadi kesalahan pada isian Anda.' }}
+                </p>
+              </div>
+            </div>
+
             <div class="space-y-4 mb-6">
               <div>
                 <label class="block font-heading text-xs font-bold uppercase tracking-wider mb-2 dark:text-gray-300">PASSWORD SAAT INI</label>
@@ -140,6 +158,82 @@
       crop-shape="circle"
       @crop="onCropped"
     />
+
+    <!-- ═══ NEO PASSWORD ALERT MODAL ═══ -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-200 ease-out"
+        enter-from-class="opacity-0 scale-95 translate-y-4"
+        enter-to-class="opacity-100 scale-100 translate-y-0"
+        leave-active-class="transition-all duration-150 ease-in"
+        leave-from-class="opacity-100 scale-100 translate-y-0"
+        leave-to-class="opacity-0 scale-95 translate-y-4"
+      >
+        <div v-if="showPasswordAlert" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+
+          <!-- Backdrop -->
+          <div
+            class="absolute inset-0 bg-neo-black/60 backdrop-blur-[2px]"
+            @click="showPasswordAlert = false"
+          />
+
+          <!-- Modal Card -->
+          <div class="relative w-full max-w-sm border-[3px] border-neo-black dark:border-white bg-white dark:bg-neo-dark-card shadow-[8px_8px_0px_#000] dark:shadow-[8px_8px_0px_rgba(255,255,255,0.8)] overflow-hidden">
+
+            <!-- Top accent bar -->
+            <div class="h-2 bg-neo-yellow w-full" />
+
+            <!-- Corner decoration -->
+            <div class="absolute top-2 right-0 w-12 h-12 bg-neo-black dark:bg-white border-l-[3px] border-b-[3px] border-neo-black dark:border-white" />
+
+            <!-- Body -->
+            <div class="p-8 text-center">
+
+              <!-- Icon box -->
+              <div class="mx-auto mb-5 w-20 h-20 bg-neo-yellow border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] flex items-center justify-center">
+                <span class="material-symbols-outlined text-neo-black text-4xl" style="font-variation-settings: 'FILL' 1;">key</span>
+              </div>
+
+              <!-- Label chip -->
+              <div class="inline-block mb-3 px-3 py-0.5 bg-neo-black dark:bg-white text-white dark:text-neo-black font-heading font-black text-[10px] uppercase tracking-[0.25em]">
+                SISTEM KEAMANAN
+              </div>
+
+              <!-- Title -->
+              <h3 class="font-heading font-black text-xl uppercase leading-tight mb-2 dark:text-white">
+                PASSWORD<br/>DIPERBARUI!
+              </h3>
+
+              <!-- Divider -->
+              <div class="mx-auto mb-4 w-12 h-[3px] bg-neo-yellow" />
+
+              <!-- Body text -->
+              <p class="font-body text-sm text-neo-grey dark:text-gray-400 mb-7 leading-relaxed">
+                Kata sandi Anda berhasil diperbarui.<br/>
+                Gunakan password baru untuk login berikutnya.
+              </p>
+
+              <!-- CTA Button -->
+              <button
+                @click="showPasswordAlert = false"
+                class="w-full py-3 px-6 bg-neo-blue text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-sm uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-2"
+              >
+                <span class="material-symbols-outlined text-base">check_circle</span>
+                SAYA MENGERTI
+              </button>
+            </div>
+
+            <!-- Bottom branding bar -->
+            <div class="px-5 py-2 bg-gray-50 dark:bg-neo-dark-surface border-t-[3px] border-neo-black dark:border-white flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-neo-grey dark:text-gray-500 text-sm">lock</span>
+              <span class="font-heading font-black text-[10px] uppercase tracking-[0.2em] text-neo-grey dark:text-gray-500">KOSGORO™ SECURITY</span>
+            </div>
+          </div>
+
+        </div>
+      </Transition>
+    </Teleport>
+
   </AuthenticatedLayout>
 </template>
 
@@ -158,10 +252,20 @@ defineProps({ mustVerifyEmail: Boolean, status: String });
 const profileForm  = useForm({ name: user.value.name, email: user.value.email });
 const passwordForm = useForm({ current_password: '', password: '', password_confirmation: '' });
 
-const updateProfile  = () => profileForm.patch(route('profile.update'));
+const updateProfile = () => profileForm.patch(route('profile.update'), {
+  preserveScroll: true,
+});
+
+// ─── Custom Alert State ───────────────────────────────────────────────────────
+const showPasswordAlert = ref(false);
+
 const updatePassword = () => passwordForm.put(route('password.update'), {
   preserveScroll: true,
-  onSuccess: () => passwordForm.reset(),
+  errorBag: 'updatePassword',
+  onSuccess: () => {
+    passwordForm.reset();
+    showPasswordAlert.value = true;
+  },
 });
 
 // ─── Cropper state ────────────────────────────────────────────────────────────

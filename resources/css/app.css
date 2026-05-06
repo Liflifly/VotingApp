@@ -27,7 +27,7 @@
     .neo-card {
         @apply bg-white border-neo border-neo-black shadow-neo;
     }
-    .neo-btn {
+    .neo-btn, .neo-btn-primary, .neo-btn-secondary, .neo-btn-danger {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -44,11 +44,11 @@
         cursor: pointer;
         user-select: none;
     }
-    .neo-btn:hover {
+    .neo-btn:hover, .neo-btn-primary:hover, .neo-btn-secondary:hover, .neo-btn-danger:hover {
         box-shadow: 6px 6px 0px #000;
         transform: translate(-1px, -1px);
     }
-    .neo-btn:active {
+    .neo-btn:active, .neo-btn-primary:active, .neo-btn-secondary:active, .neo-btn-danger:active {
         box-shadow: none;
         transform: translate(2px, 2px);
     }

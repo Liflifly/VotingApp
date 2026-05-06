@@ -110,7 +110,7 @@
           <Link :href="route('logout')" method="post" as="button"
             :class="['neo-btn-danger border-neo-black dark:border-white w-full text-xs py-2.5', sidebarCollapsed ? 'px-0 justify-center' : '']">
             <span class="material-symbols-outlined text-base">logout</span>
-            <span v-if="!sidebarCollapsed"></span>
+            <span v-if="!sidebarCollapsed" class="font-bold tracking-wider">KELUAR</span>
           </Link>
           <div v-if="!sidebarCollapsed" class="text-center mt-2">
             <span class="font-heading text-[8px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-[0.2em]">KOSGORO&#8482; SYSTEM V1.0</span>

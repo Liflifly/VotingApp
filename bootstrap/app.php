@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Render HTTP errors (403, 404, 500, etc.) via Inertia Error page
-        $exceptions->respond(function (\Illuminate\Http\Response $response) {
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response) {
             if (in_array($response->status(), [403, 404, 419, 500, 503]) && ! request()->expectsJson()) {
                 return Inertia::render('Error', ['status' => $response->status()])
                     ->toResponse(request())
