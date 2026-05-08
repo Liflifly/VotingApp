@@ -52,9 +52,34 @@
           <span class="material-symbols-outlined text-base">groups</span>
           VIEW CANDIDATES
         </Link>
-        <Link :href="route('events.results', event.slug)" class="neo-btn-sm-secondary flex-1">
+        <Link
+          v-if="userRole !== 'voter'"
+          :href="route('events.admin.results', event.slug)"
+          class="neo-btn-sm-secondary flex-1"
+        >
+          <span class="material-symbols-outlined text-base">analytics</span>
+          VIEW ANALYTICS (ADMIN)
+        </Link>
+        <Link
+          v-else-if="event.results_visibility === 'public'"
+          :href="route('events.results', event.slug)"
+          class="neo-btn-sm-secondary flex-1"
+        >
           <span class="material-symbols-outlined text-base">analytics</span>
           VIEW ANALYTICS
+        </Link>
+        <div
+          v-else
+          class="neo-btn-sm-secondary flex-1 opacity-50 cursor-not-allowed text-center flex items-center justify-center gap-2"
+          title="Results are private"
+        >
+          <span class="material-symbols-outlined text-base">lock</span>
+          RESULTS PRIVATE
+        </div>
+        
+        <Link v-if="userRole === 'voter'" :href="route('events.ai.chat', event.slug)" class="neo-btn-sm-primary flex-1 !bg-neo-yellow !text-neo-black !border-neo-black">
+          <span class="material-symbols-outlined text-base">psychology</span>
+          AI ASSISTANT
         </Link>
       </div>
 
@@ -132,6 +157,7 @@ defineProps({
   activeElection: Object,
   candidates: Array,
   totalVoters: Number,
+  userRole: String,
 });
 
 const scrollToCandidates = () => {

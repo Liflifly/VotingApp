@@ -80,7 +80,8 @@
       <nav class="flex-1 overflow-y-scroll neo-scrollbar px-2 mt-3 space-y-1 pb-4" style="-webkit-overflow-scrolling: touch;">
         <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label dark:text-gray-400 px-1">MAIN MENU</div>
 
-        <SidebarLink v-if="currentEvent" :href="route('events.dashboard', currentEvent.slug)" :active="route().current('events.dashboard')" icon="grid_view" label="Dashboard" :collapsed="sidebarCollapsed" />
+        <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')" icon="home" label="My Dashboard" :collapsed="sidebarCollapsed" />
+        <SidebarLink v-if="currentEvent" :href="route('events.dashboard', currentEvent.slug)" :active="route().current('events.dashboard')" icon="grid_view" label="Event Dashboard" :collapsed="sidebarCollapsed" />
         <SidebarLink v-if="currentEvent" :href="route('events.vote.index', currentEvent.slug)" :active="route().current('events.vote.*')" icon="how_to_vote" label="Live Ballots" :collapsed="sidebarCollapsed" />
         <SidebarLink v-if="currentEvent" :href="route('events.results', currentEvent.slug)" :active="route().current('events.results')" icon="analytics" label="Results" :collapsed="sidebarCollapsed" />
         <SidebarLink :href="route('profile.edit')" :active="route().current('profile.*')" icon="manage_accounts" label="My Profile" :collapsed="sidebarCollapsed" />

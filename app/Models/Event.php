@@ -16,6 +16,9 @@ class Event extends Model
         'description',
         'theme',
         'status',
+        'results_visibility',
+        'voter_access_token',
+        'admin_access_token',
         'created_by',
     ];
 
@@ -24,6 +27,13 @@ class Event extends Model
         static::creating(function (Event $event) {
             if (empty($event->slug)) {
                 $event->slug = static::generateUniqueSlug($event->name);
+            }
+            // Auto-generate access tokens on creation
+            if (empty($event->voter_access_token)) {
+                $event->voter_access_token = Str::random(32);
+            }
+            if (empty($event->admin_access_token)) {
+                $event->admin_access_token = Str::random(32);
             }
         });
     }
@@ -103,6 +113,32 @@ class Event extends Model
             ->first();
     }
 
+    public function aiAnalyses()
+    {
+        return $this->hasMany(AiAnalysis::class);
+    }
+
+    // ─── Token Helpers ────────────────────────────────────────────────────────
+
+    /**
+     * Regenerate both voter and admin access tokens (invalidates old links/QRs).
+     */
+    public function regenerateTokens(): void
+    {
+        $this->update([
+            'voter_access_token' => Str::random(32),
+            'admin_access_token' => Str::random(32),
+        ]);
+    }
+
+    /**
+     * Check if results are publicly visible to voters.
+     */
+    public function isResultsPublic(): bool
+    {
+        return $this->results_visibility === 'public';
+    }
+
     protected static function generateUniqueSlug(string $name): string
     {
         $slug = Str::slug($name);
@@ -116,3 +152,4 @@ class Event extends Model
         return $slug;
     }
 }
+

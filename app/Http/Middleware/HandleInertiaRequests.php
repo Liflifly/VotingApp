@@ -35,15 +35,17 @@ class HandleInertiaRequests extends Middleware
             ],
 
             'currentEvent' => $event ? [
-                'id'    => $event->id,
-                'name'  => $event->name,
-                'slug'  => $event->slug,
-                'theme' => $event->theme,
+                'id'                 => $event->id,
+                'name'               => $event->name,
+                'slug'               => $event->slug,
+                'theme'              => $event->theme,
+                'results_visibility' => $event->results_visibility,
             ] : null,
 
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),
+                'info'    => fn () => $request->session()->get('info'),
                 'status'  => fn () => $request->session()->get('status'),
             ],
         ];

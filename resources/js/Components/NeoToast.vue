@@ -95,5 +95,8 @@ watch(() => page.props.flash, (flash) => {
   if (flash?.error) {
     addToast('error', flash.error);
   }
+  if (flash?.info) {
+    addToast('info', flash.info);
+  }
 }, { deep: true, immediate: true });
 </script>

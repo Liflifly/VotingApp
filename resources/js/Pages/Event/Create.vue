@@ -42,6 +42,30 @@
         <div v-if="form.errors.theme" class="font-body text-xs text-neo-red mt-1.5 font-semibold">{{ form.errors.theme }}</div>
       </div>
 
+      <!-- Results Visibility -->
+      <div>
+        <label class="block font-heading text-label-caps uppercase text-neo-black dark:text-white mb-3">RESULTS VISIBILITY <span class="text-neo-red">*</span></label>
+        <div class="grid grid-cols-2 gap-3">
+          <button
+            v-for="opt in visibilityOptions"
+            :key="opt.value"
+            type="button"
+            @click="form.results_visibility = opt.value"
+            :class="[
+              'border-2 p-4 text-left transition-all cursor-pointer focus:outline-none',
+              form.results_visibility === opt.value
+                ? 'border-neo-blue bg-neo-blue/10 shadow-[4px_4px_0px_#0048FF]'
+                : 'border-neo-black hover:border-neo-blue hover:bg-neo-blue/5'
+            ]"
+          >
+            <span class="material-symbols-outlined text-xl mb-1 block" :class="form.results_visibility === opt.value ? 'text-neo-blue' : 'text-neo-grey'">{{ opt.icon }}</span>
+            <div class="font-heading text-xs font-black uppercase mb-1 dark:text-white">{{ opt.label }}</div>
+            <div class="font-body text-[10px] text-neo-grey">{{ opt.desc }}</div>
+          </button>
+        </div>
+        <div v-if="form.errors.results_visibility" class="font-body text-xs text-neo-red mt-1.5 font-semibold">{{ form.errors.results_visibility }}</div>
+      </div>
+
       <!-- Must be logged in notice -->
       <div v-if="!$page.props.auth?.user" class="neo-card p-4 border-neo-yellow bg-neo-yellow/10">
         <div class="flex items-start gap-3">
@@ -80,6 +104,7 @@ const form = useForm({
   name: '',
   description: '',
   theme: 'neo-brutalism',
+  results_visibility: 'private',
 });
 
 const slugPreview = computed(() =>
@@ -90,6 +115,11 @@ const themes = [
   { value: 'neo-brutalism', label: 'Neo-Brutalism', desc: 'Bold, high-contrast, raw energy.' },
   { value: 'semi-formal',   label: 'Semi-Formal',   desc: 'Clean and professional.' },
   { value: 'formal',        label: 'Formal',        desc: 'Corporate and polished.' },
+];
+
+const visibilityOptions = [
+  { value: 'private', label: 'Private',  icon: 'lock',       desc: 'Only admins can see results.' },
+  { value: 'public',  label: 'Public',   icon: 'public',     desc: 'All voters can see results in real-time.' },
 ];
 
 const submit = () => form.post(route('events.store'));

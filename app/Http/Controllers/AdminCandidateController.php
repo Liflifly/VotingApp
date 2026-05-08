@@ -103,7 +103,10 @@ class AdminCandidateController extends Controller
         foreach ($fieldDefs as $field) {
             $rules = $field->required ? ['required'] : ['nullable'];
             if ($field->type === 'image') {
-                $dynamicRules["fields.{$field->key}"] = [...$rules, 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'];
+                // On edit, image is optional if one already exists; only required if none stored yet
+                $hasExistingImage = isset($fieldsData[$field->key]) && $fieldsData[$field->key];
+                $imageRules = $hasExistingImage ? ['nullable'] : $rules;
+                $dynamicRules["fields.{$field->key}"] = [...$imageRules, 'sometimes', 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'];
             } else {
                 $dynamicRules["fields.{$field->key}"] = [...$rules, 'string', 'max:2000'];
             }

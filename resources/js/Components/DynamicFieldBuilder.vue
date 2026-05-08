@@ -4,24 +4,29 @@
     <p class="font-body text-[10px] text-neo-grey mb-4">{{ description }}</p>
     
     <div class="space-y-3 mb-4">
-      <div v-for="(f, i) in modelValue" :key="i" class="p-3 border-2 border-gray-200 dark:border-gray-700 relative group">
-        <button @click="removeField(i)" class="absolute top-2 right-2 text-gray-400 hover:text-neo-red">
-          <span class="material-symbols-outlined text-sm">close</span>
-        </button>
-        <div class="grid grid-cols-2 gap-2">
-          <input v-model="f.label" type="text" class="neo-input py-1 text-xs" placeholder="Field Label (e.g. Student ID)" required />
-          <input v-model="f.key" type="text" class="neo-input py-1 text-xs" placeholder="Database Key (e.g. student_id)" required />
-          <select v-model="f.type" class="neo-input py-1 text-xs">
-            <option value="text">Text</option>
-            <option value="number">Number</option>
-            <option value="email">Email</option>
-            <option value="textarea">Long Text</option>
-            <option value="select">Dropdown</option>
-            <option value="image">Image Upload</option>
-          </select>
-          <label class="flex items-center gap-2 text-xs font-heading uppercase dark:text-white">
-            <input type="checkbox" v-model="f.required" class="accent-neo-blue"> Required
-          </label>
+      <div v-for="(f, i) in modelValue" :key="i" class="p-3 border-2 border-neo-black dark:border-white relative group bg-white dark:bg-neo-dark-card shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] mb-4">
+        <div class="flex flex-col md:flex-row gap-2 items-start md:items-center">
+          <input v-model="f.label" @input="updateLabel(f, i)" type="text" class="neo-input py-1 text-xs flex-1 w-full" placeholder="Field Label (e.g. Student ID)" required />
+          <div class="flex items-center gap-2 w-full md:w-auto">
+            <select v-model="f.type" class="neo-input py-1 text-xs flex-1 md:w-32">
+              <option value="text">Text</option>
+              <option value="number">Number</option>
+              <option value="email">Email</option>
+              <option value="textarea">Long Text</option>
+              <option value="select">Dropdown</option>
+              <option value="image">Image Upload</option>
+            </select>
+            <label class="flex items-center gap-2 text-[10px] font-heading font-bold uppercase dark:text-white shrink-0">
+              <input type="checkbox" v-model="f.required" class="accent-neo-blue"> Required
+            </label>
+            <button 
+              @click="removeField(i)" 
+              class="w-8 h-8 flex items-center justify-center border-2 border-neo-black bg-white hover:bg-neo-red hover:text-white transition-colors shrink-0"
+              title="Remove Field"
+            >
+              <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+          </div>
         </div>
         
         <!-- Options for 'select' type -->
@@ -67,5 +72,33 @@ const removeField = (index) => {
 
 const updateOptions = (field, value) => {
   field.options = value.split(',').map(s => s.trim()).filter(s => s);
+};
+
+const slugify = (text) => {
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, '_')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '_')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+};
+
+const updateLabel = (field, index) => {
+  if (!field.label) {
+    field.key = '';
+    return;
+  }
+  
+  let baseKey = slugify(field.label) || 'field';
+  let finalKey = baseKey;
+  let counter = 1;
+  
+  // Check for duplicates
+  while (props.modelValue.some((f, i) => f.key === finalKey && i !== index)) {
+    finalKey = `${baseKey}_${counter}`;
+    counter++;
+  }
+  
+  field.key = finalKey;
 };
 </script>

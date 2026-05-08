@@ -16,7 +16,10 @@
           <button @click="toggle()" class="w-10 h-10 border-2 border-neo-black dark:border-white flex items-center justify-center hover:bg-neo-yellow dark:hover:bg-neo-yellow dark:hover:text-neo-black transition-colors dark:text-white">
             <span class="material-symbols-outlined text-base">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
           </button>
-          <Link :href="route('login')" class="neo-btn-primary text-xs py-2.5 px-4 sm:px-6">
+          <Link v-if="$page.props.auth.user" :href="route('dashboard')" class="neo-btn-primary text-xs py-2.5 px-4 sm:px-6">
+            MY DASHBOARD &#8594;
+          </Link>
+          <Link v-else :href="route('login')" class="neo-btn-primary text-xs py-2.5 px-4 sm:px-6">
             SIGN IN &#8594;
           </Link>
         </div>
@@ -59,35 +62,22 @@
         </p>
 
         <!-- Primary CTAs -->
-        <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 px-4 sm:px-0">
-          <Link :href="route('events.create')" class="neo-btn-primary">
-            CREATE AN EVENT &#8594;
+        <div v-if="!$page.props.auth.user" class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 px-4 sm:px-0">
+          <Link :href="route('register')" class="neo-btn-primary">
+            GET STARTED FOR FREE &#8594;
           </Link>
-          <button @click="showJoinInput = !showJoinInput" class="neo-btn-secondary bg-white hover:bg-neo-yellow text-neo-black">
-            JOIN AN EVENT
-          </button>
+          <Link :href="route('login')" class="neo-btn-secondary bg-white hover:bg-neo-yellow text-neo-black">
+            SIGN IN TO ACCOUNT
+          </Link>
+        </div>
+        <div v-else class="flex justify-center mb-6 px-4 sm:px-0">
+          <Link :href="route('dashboard')" class="neo-btn-primary text-sm sm:text-base px-8 py-3">
+            GO TO DASHBOARD &#8594;
+          </Link>
         </div>
 
-        <!-- Join Event Input -->
-        <Transition enter-active-class="transition-all duration-300" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0">
-          <div v-if="showJoinInput" class="max-w-md mx-auto neo-card p-4 shadow-neo">
-            <p class="font-heading text-xs font-bold uppercase mb-3 dark:text-white">Enter Event Slug or Code</p>
-            <div class="flex gap-2">
-              <input
-                v-model="eventSlug"
-                type="text"
-                class="neo-input flex-1 text-sm"
-                placeholder="e.g. my-company-vote"
-                @keydown.enter="goToEvent"
-              />
-              <button @click="goToEvent" class="neo-btn-primary px-4 py-2 text-sm whitespace-nowrap">GO →</button>
-            </div>
-            <p class="font-body text-xs text-neo-grey mt-2">Ask your event organizer for the event slug.</p>
-          </div>
-        </Transition>
-
         <!-- Secondary: Already have account -->
-        <div class="mt-6">
+        <div v-if="!$page.props.auth.user" class="mt-6">
           <Link :href="route('login')" class="font-heading text-xs font-bold text-neo-grey hover:text-neo-blue uppercase tracking-wider transition-colors">
             Already have an account? Sign in →
           </Link>
@@ -258,16 +248,9 @@ defineProps({
 
 const { isDark, toggle } = useDarkMode();
 const openFaq      = ref(null);
-const showJoinInput = ref(false);
-const eventSlug    = ref('');
 
 const toggleFaq = (index) => {
   openFaq.value = openFaq.value === index ? null : index;
-};
-
-const goToEvent = () => {
-  const slug = eventSlug.value.trim().toLowerCase();
-  if (slug) router.visit(`/e/${slug}`);
 };
 
 const faqs = [

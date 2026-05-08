@@ -24,25 +24,42 @@ class EventSettingsController extends Controller
             'expires_at' => $t->expires_at?->toISOString(),
         ]);
 
+        // Build full shareable URLs
+        $voterLink = url("/join/v/{$event->voter_access_token}");
+        $adminLink = url("/join/a/{$event->admin_access_token}");
+
         return Inertia::render('Admin/EventSettings', [
             'event'          => $event,
             'voterFields'    => $voterFields,
-            'candidateFields' => $candidateFields,
+            'candidateFields'=> $candidateFields,
             'tokens'         => $tokens,
+            'voterLink'      => $voterLink,
+            'adminLink'      => $adminLink,
         ]);
     }
 
     public function update(Request $request, Event $event)
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'theme'       => ['required', 'in:neo-brutalism,semi-formal,formal'],
+            'name'               => ['required', 'string', 'max:255'],
+            'description'        => ['nullable', 'string', 'max:1000'],
+            'theme'              => ['required', 'in:neo-brutalism,semi-formal,formal'],
+            'results_visibility' => ['required', 'in:public,private'],
         ]);
 
         $event->update($validated);
 
         return back()->with('success', 'Event settings updated.');
+    }
+
+    /**
+     * Regenerate voter and admin access tokens (invalidates old links/QR codes).
+     */
+    public function regenerateLinks(Request $request, Event $event)
+    {
+        $event->regenerateTokens();
+
+        return back()->with('success', 'Share links regenerated. Old links and QR codes are now invalid.');
     }
 
     /**

@@ -14,13 +14,19 @@ class AdminResultController extends Controller
     {
         $elections = $event->elections()->latest()->get();
 
-        $selectedElection = $event->elections()->where('status', 'active')->first()
+        // Support switching election via query param
+        $selectedElection = null;
+        if (request()->has('election_id')) {
+            $selectedElection = $event->elections()->find(request()->integer('election_id'));
+        }
+
+        $selectedElection ??= $event->elections()->where('status', 'active')->first()
             ?? $event->elections()->where('status', 'ended')->latest()->first()
             ?? $event->elections()->latest()->first();
 
-        $results     = collect();
-        $totalVotes  = 0;
-        $totalVoters = $event->users()->wherePivot('role', 'voter')->count();
+        $results         = collect();
+        $totalVotes      = 0;
+        $totalVoters     = $event->users()->wherePivot('role', 'voter')->count();
         $candidateFields = collect();
 
         if ($selectedElection) {

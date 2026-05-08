@@ -109,6 +109,19 @@ class VoteController extends Controller
 
     public function results(Request $request, Event $event)
     {
+        $userRole = $request->get('_event_role');
+
+        // Enforce results visibility for voters
+        if ($userRole === 'voter' && ! $event->isResultsPublic()) {
+            return Inertia::render('Results/Index', [
+                'candidates'      => [],
+                'totalVotes'      => 0,
+                'election'        => null,
+                'candidateFields' => [],
+                'accessDenied'    => true,
+            ]);
+        }
+
         $election = $event->elections()->active()->first()
             ?? $event->elections()->where('status', 'ended')->latest()->first();
 
@@ -118,6 +131,7 @@ class VoteController extends Controller
                 'totalVotes'      => 0,
                 'election'        => null,
                 'candidateFields' => [],
+                'accessDenied'    => false,
             ]);
         }
 
@@ -141,6 +155,7 @@ class VoteController extends Controller
             'totalVotes'      => $totalVotes,
             'election'        => $election,
             'candidateFields' => $candidateFields,
+            'accessDenied'    => false,
         ]);
     }
 }

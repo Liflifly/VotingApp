@@ -17,7 +17,6 @@ class EventController extends Controller
 
     /**
      * Show the landing page for a specific event (public).
-     * Guests can see the event name and choose to join.
      */
     public function show(Event $event)
     {
@@ -28,7 +27,7 @@ class EventController extends Controller
         $activeElection = $event->activeElection();
         $totalVoters    = $event->users()->wherePivot('role', 'voter')->count();
 
-        return Inertia::render('Event/Landing', [
+        return Inertia::render('Event/Join', [
             'event'          => $event->only('id', 'name', 'slug', 'description', 'theme'),
             'activeElection' => $activeElection,
             'totalVoters'    => $totalVoters,
@@ -38,8 +37,7 @@ class EventController extends Controller
     // ─── Create Event ─────────────────────────────────────────────────────────
 
     /**
-     * Show the "Create Event" form.
-     * User must be authenticated to create an event.
+     * Show the "Create Event" form. Requires authentication.
      */
     public function create()
     {
@@ -47,14 +45,16 @@ class EventController extends Controller
     }
 
     /**
-     * Store a new event. The creator automatically becomes super_admin.
+     * Store a new event. Creator automatically becomes super_admin.
+     * Redirects to Event Settings so they can immediately get their share links.
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'theme'       => ['required', 'in:neo-brutalism,semi-formal,formal'],
+            'name'               => ['required', 'string', 'max:255'],
+            'description'        => ['nullable', 'string', 'max:1000'],
+            'theme'              => ['required', 'in:neo-brutalism,semi-formal,formal'],
+            'results_visibility' => ['required', 'in:public,private'],
         ]);
 
         $user  = $request->user();
@@ -66,95 +66,87 @@ class EventController extends Controller
         // Attach creator as super_admin in the pivot
         $event->users()->attach($user->id, ['role' => 'super_admin']);
 
-        return redirect()->route('events.dashboard', $event)
-            ->with('success', 'Event created! You are now the Super Admin.');
+        // Redirect to settings page so they can configure fields and get share links
+        return redirect()->route('events.admin.settings', $event)
+            ->with('success', 'Event created! Configure your voter fields and share the links below.');
     }
 
-    // ─── Join Event ───────────────────────────────────────────────────────────
+    // ─── Join via Access Token Links (Phase 4) ────────────────────────────────
 
     /**
-     * Show the "Join Event" page (role selection: admin vs voter).
+     * Voter join page — reached via /join/v/{voter_access_token}
+     * Requires web login first (redirected back here after login).
      */
-    public function join(Event $event)
+    public function joinViaVoterToken(Request $request, string $token)
     {
+        $event = Event::where('voter_access_token', $token)->firstOrFail();
+
         if ($event->status === 'archived') {
             abort(404);
         }
 
-        // If already a member, redirect to dashboard
-        if (Auth::check() && $event->getUserRole(Auth::user()) !== null) {
+        $user = $request->user();
+
+        // If already a member → redirect to event dashboard
+        if ($user && $event->getUserRole($user) !== null) {
             return redirect()->route('events.dashboard', $event);
         }
 
         $voterFields = $event->voterFieldDefinitions()->get()->map->toFormField();
 
-        return Inertia::render('Event/Join', [
-            'event'       => $event->only('id', 'name', 'slug', 'description', 'theme'),
-            'voterFields' => $voterFields,
+        return Inertia::render('Event/JoinVoter', [
+            'event'            => $event->only('id', 'name', 'slug', 'description', 'theme'),
+            'voterFields'      => $voterFields,
+            'voterAccessToken' => $token,
         ]);
     }
 
     /**
-     * Join as an admin using an invite token.
-     * If user is not authenticated, they register first then are attached.
+     * Admin join page — reached via /join/a/{admin_access_token}
+     * Requires web login first. Then user enters invite token.
      */
-    public function joinAsAdmin(Request $request, Event $event)
+    public function joinViaAdminToken(Request $request, string $token)
     {
-        $request->validate([
-            'token'    => ['required', 'string'],
-            'name'     => ['required_without:_authenticated', 'string', 'max:255'],
-            'email'    => ['required_without:_authenticated', 'email', 'unique:users,email'],
-            'password' => ['required_without:_authenticated', 'confirmed', Rules\Password::defaults()],
+        $event = Event::where('admin_access_token', $token)->firstOrFail();
+
+        if ($event->status === 'archived') {
+            abort(404);
+        }
+
+        $user = $request->user();
+
+        // If already a member → redirect to event dashboard
+        if ($user && $event->getUserRole($user) !== null) {
+            return redirect()->route('events.dashboard', $event);
+        }
+
+        return Inertia::render('Event/JoinAdmin', [
+            'event'            => $event->only('id', 'name', 'slug', 'description', 'theme'),
+            'adminAccessToken' => $token,
         ]);
+    }
 
-        // Validate the invite token
-        $invite = $event->inviteTokens()
-            ->valid()
-            ->where('token', $request->token)
-            ->first();
+    /**
+     * Process voter event registration (custom fields form submission).
+     * The user is already authenticated (web account exists).
+     */
+    public function registerAsVoter(Request $request, string $token)
+    {
+        $event = Event::where('voter_access_token', $token)->firstOrFail();
 
-        if (! $invite) {
-            return back()->withErrors(['token' => 'Invalid or expired invite token.']);
+        if ($event->status === 'archived') {
+            abort(404);
         }
 
-        $user = Auth::user();
+        $user = $request->user();
 
-        if (! $user) {
-            // Register new user
-            $user = new User();
-            $user->name     = $request->name;
-            $user->email    = $request->email;
-            $user->password = Hash::make($request->password);
-            $user->save();
-            Auth::login($user);
-        }
-
-        // Check not already a member
+        // Guard: already a member
         if ($event->getUserRole($user) !== null) {
             return redirect()->route('events.dashboard', $event)
-                ->with('error', 'You are already a member of this event.');
+                ->with('info', 'You are already a member of this event.');
         }
 
-        // Attach with the role from the token
-        $event->users()->attach($user->id, ['role' => $invite->role]);
-        $invite->markUsed($user);
-
-        return redirect()->route('events.dashboard', $event)
-            ->with('success', 'Welcome! You joined as ' . ucfirst(str_replace('_', ' ', $invite->role)) . '.');
-    }
-
-    /**
-     * Register as a voter for an event (with optional dynamic fields).
-     */
-    public function joinAsVoter(Request $request, Event $event)
-    {
-        $baseRules = [
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'unique:users,email'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ];
-
-        // Dynamically add validation for custom voter fields
+        // Build dynamic validation rules from event field definitions
         $fieldDefs    = $event->voterFieldDefinitions()->get();
         $dynamicRules = [];
         foreach ($fieldDefs as $field) {
@@ -167,13 +159,7 @@ class EventController extends Controller
             };
         }
 
-        $validated = $request->validate(array_merge($baseRules, $dynamicRules));
-
-        $user = new User();
-        $user->name     = $validated['name'];
-        $user->email    = $validated['email'];
-        $user->password = Hash::make($validated['password']);
-        $user->save();
+        $validated = $request->validate($dynamicRules);
 
         // Process dynamic field data (handle image uploads)
         $metadata = [];
@@ -191,9 +177,87 @@ class EventController extends Controller
             'metadata' => json_encode($metadata),
         ]);
 
-        Auth::login($user);
+        return redirect()->route('events.dashboard', $event)
+            ->with('success', 'Welcome! You are now registered as a voter for ' . $event->name . '.');
+    }
+
+    /**
+     * Process admin event join via invite token.
+     * The user is already authenticated (web account exists).
+     */
+    public function registerAsAdmin(Request $request, string $token)
+    {
+        $event = Event::where('admin_access_token', $token)->firstOrFail();
+
+        if ($event->status === 'archived') {
+            abort(404);
+        }
+
+        $user = $request->user();
+
+        // Guard: already a member
+        if ($event->getUserRole($user) !== null) {
+            return redirect()->route('events.dashboard', $event)
+                ->with('info', 'You are already a member of this event.');
+        }
+
+        $request->validate([
+            'token' => ['required', 'string'],
+        ]);
+
+        // Validate the invite token
+        $invite = $event->inviteTokens()
+            ->valid()
+            ->where('token', $request->token)
+            ->first();
+
+        if (! $invite) {
+            return back()->withErrors(['token' => 'Invalid or expired invite token.']);
+        }
+
+        $event->users()->attach($user->id, ['role' => $invite->role]);
+        $invite->markUsed($user);
 
         return redirect()->route('events.dashboard', $event)
-            ->with('success', 'Welcome! You are now registered as a voter.');
+            ->with('success', 'Welcome! You joined as ' . ucfirst(str_replace('_', ' ', $invite->role)) . '.');
+    }
+
+    // ─── Legacy join (kept for backward compat, slug-based) ──────────────────
+
+    /**
+     * @deprecated Use joinViaVoterToken / joinViaAdminToken instead.
+     */
+    public function join(Event $event)
+    {
+        if ($event->status === 'archived') {
+            abort(404);
+        }
+
+        if (Auth::check() && $event->getUserRole(Auth::user()) !== null) {
+            return redirect()->route('events.dashboard', $event);
+        }
+
+        $voterFields = $event->voterFieldDefinitions()->get()->map->toFormField();
+
+        return Inertia::render('Event/Join', [
+            'event'       => $event->only('id', 'name', 'slug', 'description', 'theme'),
+            'voterFields' => $voterFields,
+        ]);
+    }
+
+    /**
+     * @deprecated Use registerAsVoter instead.
+     */
+    public function joinAsVoter(Request $request, Event $event)
+    {
+        return redirect()->route('events.show', $event);
+    }
+
+    /**
+     * @deprecated Use registerAsAdmin instead.
+     */
+    public function joinAsAdmin(Request $request, Event $event)
+    {
+        return redirect()->route('events.show', $event);
     }
 }
