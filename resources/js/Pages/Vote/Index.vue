@@ -90,8 +90,8 @@
               <h3 class="font-heading font-black text-sm md:text-base uppercase mb-1 group-hover:text-neo-blue transition-colors truncate">{{ candidate.name }}</h3>
               <p class="font-body text-[11px] md:text-xs text-neo-grey mb-4 line-clamp-2 flex-1">{{ candidate.vision }}</p>
 
-              <div class="w-full text-[10px] md:text-xs py-2 mt-auto text-center"
-                :class="hasRead(candidate.id) ? 'neo-btn-secondary' : 'neo-btn-primary'">
+              <div class="w-full mt-auto"
+                :class="hasRead(candidate.id) ? 'neo-btn-sm-secondary' : 'neo-btn-sm-primary'">
                 {{ hasRead(candidate.id) ? 'BACA LAGI' : 'BACA DETAIL & VOTE →' }}
               </div>
             </div>
@@ -114,7 +114,7 @@
             <button 
               v-if="!allRead"
               @click="markAllAsRead"
-              class="neo-btn bg-neo-yellow hover:bg-neo-blue hover:text-white text-neo-black py-1.5 px-3 border-2 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none text-[10px] md:text-xs font-heading font-black flex items-center gap-1.5 focus:outline-none"
+              class="neo-btn-sm bg-neo-yellow hover:bg-neo-blue hover:text-white text-neo-black"
             >
               <span class="material-symbols-outlined text-sm font-bold">done_all</span>
               SAYA SUDAH MEMBACA SELURUH DETAIL KANDIDAT SEBELUMNYA
@@ -129,12 +129,12 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
               <label v-for="candidate in candidates" :key="candidate.id" 
                 :class="[
-                  'flex items-center gap-3 p-3 border-2 border-neo-black cursor-pointer transition-all shadow-neo-sm',
-                  form.candidate_id === candidate.id ? 'bg-neo-blue text-white translate-x-[2px] translate-y-[2px] shadow-none' : 'bg-white hover:bg-gray-50'
+                  'flex items-center gap-3 p-2.5 border-2 border-neo-black dark:border-white cursor-pointer transition-all shadow-neo-sm dark:shadow-[2px_2px_0px_#fff]',
+                  form.candidate_id === candidate.id ? 'bg-neo-blue text-white translate-x-[2px] translate-y-[2px] shadow-none' : 'bg-white dark:bg-neo-dark-card hover:bg-gray-50 dark:hover:bg-neo-dark-surface dark:text-white'
                 ]"
               >
                 <input type="radio" v-model="form.candidate_id" :value="candidate.id" class="sr-only">
-                <span class="font-heading font-black text-sm" :class="form.candidate_id === candidate.id ? 'text-neo-yellow' : 'text-neo-black'">#{{ candidate.order_number }}</span>
+                <span class="font-heading font-black text-sm" :class="form.candidate_id === candidate.id ? 'text-neo-yellow' : 'text-neo-black dark:text-white'">#{{ candidate.order_number }}</span>
                 <span class="font-heading font-bold text-sm uppercase flex-1 truncate">{{ candidate.name }}</span>
                 <span class="material-symbols-outlined text-lg" v-if="form.candidate_id === candidate.id">check_circle</span>
               </label>
@@ -158,9 +158,10 @@
         </div>
 
         <!-- Scroll to Top Button -->
-        <button @click="scrollToCandidates" class="inline-flex items-center gap-1 font-heading font-bold text-[10px] sm:text-xs uppercase tracking-wider text-neo-black dark:text-white bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white px-3 py-2 hover:bg-neo-yellow hover:text-neo-black transition-colors w-fit shadow-[2px_2px_0px_#000] dark:shadow-[2px_2px_0px_#fff] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none mt-2">
+        <!-- Scroll to Top Button -->
+        <button @click="scrollToCandidates" class="neo-btn-sm-secondary mt-2">
           <span class="material-symbols-outlined text-sm sm:text-base">arrow_upward</span>
-          LIHAT DETAIL KANDIDAT
+          DETAIL KANDIDAT
         </button>
       </div>
     </div>

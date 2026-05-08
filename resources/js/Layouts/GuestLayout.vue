@@ -100,27 +100,6 @@
       <!-- Bottom stripe on right panel -->
       <div class="neo-stripe-thin mt-auto"></div>
     </div>
-    <!-- Scroll to Top Button -->
-    <Transition
-      enter-active-class="transition-all duration-200 ease-out"
-      enter-from-class="opacity-0 translate-y-4 scale-75"
-      enter-to-class="opacity-100 translate-y-0 scale-100"
-      leave-active-class="transition-opacity duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <button 
-        v-show="showScrollTop"
-        @click="scrollToTop"
-        class="fixed z-[9999] bg-neo-yellow text-neo-black border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:bg-neo-blue hover:text-white hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-300 flex items-center justify-center focus:outline-none"
-        :class="isAtBottom ? 'bottom-28 left-[calc(50%-4rem)] w-32 h-10 rounded-none px-3 gap-1.5' : 'bottom-28 left-[calc(100%-4.5rem)] w-12 h-12 hover:translate-x-[1.5px] hover:translate-y-[1.5px]'"
-        aria-label="Scroll to top"
-      >
-        <span v-if="isAtBottom" class="whitespace-nowrap font-heading font-black tracking-wider text-[11px] select-none">KE ATAS</span>
-        <span class="material-symbols-outlined font-bold text-xl">arrow_upward</span>
-      </button>
-    </Transition>
-
     <NeoToast />
   </div>
 </template>
@@ -129,7 +108,6 @@
 import NeoToast from '@/Components/NeoToast.vue';
 import { useDarkMode } from '@/Composables/useDarkMode.js';
 import { Link, router } from '@inertiajs/vue3';
-import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 defineProps({
   title: String,
@@ -138,49 +116,4 @@ defineProps({
 
 // Initialize dark mode (no-op if already initialized, just keeps reactive)
 useDarkMode();
-
-const showScrollTop = ref(false);
-const isAtBottom = ref(false);
-const isScrollingToTop = ref(false);
-
-const handleScroll = () => {
-  if (isScrollingToTop.value) return;
-
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  showScrollTop.value = scrollTop > 300;
-
-  const scrollHeight = document.documentElement.scrollHeight;
-  const clientHeight = window.innerHeight;
-  
-  isAtBottom.value = (scrollTop + clientHeight) >= (scrollHeight - 45);
-};
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', handleScroll);
-});
-
-const scrollToTop = () => {
-  isScrollingToTop.value = true;
-  showScrollTop.value = false;
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-
-  setTimeout(() => {
-    isScrollingToTop.value = false;
-    isAtBottom.value = false;
-  }, 800);
-};
-
-router.on('navigate', () => { 
-  showScrollTop.value = false;
-  isAtBottom.value = false;
-  isScrollingToTop.value = false;
-});
 </script>

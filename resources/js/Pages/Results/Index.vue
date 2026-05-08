@@ -39,7 +39,7 @@
           <!-- Scroll Button -->
           <button 
             @click="scrollToCandidates" 
-            class="neo-btn bg-white hover:bg-neo-blue hover:text-white text-neo-black py-2 px-3 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 shrink-0 self-stretch sm:self-auto flex items-center justify-center gap-2 text-xs font-heading font-black focus:outline-none"
+            class="neo-btn-sm-secondary shrink-0 self-stretch sm:self-auto"
           >
             LIHAT KANDIDAT
             <span class="material-symbols-outlined text-base animate-bounce">arrow_downward</span>
@@ -66,30 +66,30 @@
       </div>
 
       <!-- CHAMPION (Winner) -->
-      <div v-if="sortedCandidates.length > 0" class="neo-card p-5 md:p-6 lg:p-8 mb-6 md:mb-8 border-neo-yellow bg-neo-yellow/5 relative overflow-hidden">
-        <div class="absolute top-0 right-0 px-3 md:px-4 py-1.5 md:py-2 bg-neo-yellow border-l-neo border-b-neo border-neo-black">
-          <span class="font-heading text-[10px] md:text-xs font-black uppercase">🏆 CHAMPION</span>
+      <div v-if="sortedCandidates.length > 0" class="neo-card p-4 sm:p-5 md:p-6 mb-5 md:mb-6 border-neo-yellow bg-neo-yellow/5 relative overflow-hidden">
+        <div class="absolute top-0 right-0 px-2.5 py-1 bg-neo-yellow border-l-2 border-b-2 border-neo-black">
+          <span class="font-heading text-[10px] sm:text-xs font-black uppercase">🏆 CHAMPION</span>
         </div>
         <div class="absolute bottom-0 left-0 w-12 h-12 bg-neo-yellow/20 border-r-2 border-t-2 border-neo-yellow/30 hidden md:block"></div>
 
-        <div class="flex flex-col md:flex-row items-center gap-4 md:gap-6 mt-6 md:mt-0">
-          <div class="w-20 h-20 md:w-24 md:h-24 bg-gray-100 border-neo border-neo-black shrink-0 overflow-hidden">
+        <div class="flex flex-col md:flex-row items-center gap-3 sm:gap-4 md:gap-5 mt-4 md:mt-0">
+          <div class="w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 bg-gray-100 border-neo border-neo-black shrink-0 overflow-hidden">
             <img v-if="sortedCandidates[0].photo" :src="`/storage/${sortedCandidates[0].photo}`" class="w-full h-full object-cover">
             <div v-else class="w-full h-full flex items-center justify-center">
-              <span class="material-symbols-outlined text-3xl md:text-4xl text-gray-300">person</span>
+              <span class="material-symbols-outlined text-2xl sm:text-3xl md:text-4xl text-gray-300">person</span>
             </div>
           </div>
           <div class="flex-1 text-center md:text-left">
-            <h3 class="font-heading font-black text-[24px] md:text-h1 uppercase text-neo-black">{{ sortedCandidates[0].name }}</h3>
-            <div class="font-heading text-[20px] md:text-stats text-neo-blue mt-1">{{ sortedCandidates[0].votes_count.toLocaleString() }} <span class="text-xs md:text-sm text-neo-grey">VOTES</span></div>
+            <h3 class="font-heading font-black text-base sm:text-lg md:text-xl uppercase text-neo-black">{{ sortedCandidates[0].name }}</h3>
+            <div class="font-heading text-sm sm:text-base md:text-lg font-bold text-neo-blue mt-1">{{ sortedCandidates[0].votes_count.toLocaleString() }} <span class="text-xs md:text-sm text-neo-grey">VOTES</span></div>
           </div>
           <div class="text-center">
-            <div class="font-heading text-[40px] md:text-display text-neo-blue">{{ getPercentage(sortedCandidates[0].votes_count) }}%</div>
+            <div class="font-heading text-2xl sm:text-3xl md:text-4xl font-black text-neo-blue">{{ getPercentage(sortedCandidates[0].votes_count) }}%</div>
           </div>
         </div>
 
         <!-- Health Bar -->
-        <div class="mt-4 md:mt-6 neo-health-bar">
+        <div class="mt-3 md:mt-4 neo-health-bar">
           <div class="neo-health-fill bg-neo-blue" :style="{ width: `${getPercentage(sortedCandidates[0].votes_count)}%` }"></div>
         </div>
       </div>

@@ -35,7 +35,7 @@
           
           <!-- Custom Neo-Brutalist Dropdown -->
           <div v-if="u.role !== 'super_admin'" class="relative">
-            <button @click="toggleDropdown(u.id)" class="neo-input flex items-center justify-between gap-2 py-1 md:py-1.5 px-2 md:px-3 text-[10px] md:text-xs w-28 bg-white cursor-pointer hover:bg-gray-50 focus:outline-none transition-colors">
+            <button @click="toggleDropdown(u.id)" class="neo-input flex items-center justify-between gap-2 py-1 md:py-1.5 px-2 md:px-3 text-[10px] md:text-xs w-28 bg-white dark:bg-neo-dark-card cursor-pointer hover:bg-gray-50 dark:hover:bg-neo-dark-surface focus:outline-none transition-colors">
               <span class="font-heading font-bold tracking-wider">{{ u.role.toUpperCase() }}</span>
               <span class="material-symbols-outlined text-[16px]">expand_more</span>
             </button>
@@ -44,9 +44,9 @@
             <div v-if="openDropdown === u.id" @click="closeDropdown" class="fixed inset-0 z-40"></div>
             
             <!-- Dropdown Menu -->
-            <div v-show="openDropdown === u.id" class="absolute top-full right-0 mt-1 w-full bg-white border-2 border-neo-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] z-50 flex flex-col">
-              <button @click="updateRole(u, 'user')" class="px-3 py-2 text-left font-heading text-xs font-bold hover:bg-neo-blue hover:text-white transition-colors border-b-2 border-neo-black cursor-pointer">USER</button>
-              <button @click="updateRole(u, 'admin')" class="px-3 py-2 text-left font-heading text-xs font-bold hover:bg-neo-blue hover:text-white transition-colors cursor-pointer">ADMIN</button>
+            <div v-show="openDropdown === u.id" class="absolute top-full right-0 mt-1 w-full bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] z-50 flex flex-col">
+              <button @click="updateRole(u, 'user')" class="px-3 py-2 text-left font-heading text-xs font-bold hover:bg-neo-blue hover:text-white transition-colors border-b-2 border-neo-black dark:border-white dark:text-white cursor-pointer">USER</button>
+              <button @click="updateRole(u, 'admin')" class="px-3 py-2 text-left font-heading text-xs font-bold hover:bg-neo-blue hover:text-white transition-colors dark:text-white cursor-pointer">ADMIN</button>
             </div>
           </div>
         </div>

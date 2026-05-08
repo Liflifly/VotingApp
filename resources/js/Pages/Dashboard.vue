@@ -28,7 +28,7 @@
               <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
               LIVE NOW
             </div>
-            <h2 class="font-heading font-black text-[28px] sm:text-[36px] md:text-h1 uppercase text-white mb-2 truncate">{{ activeElection.name }}</h2>
+            <h2 class="font-heading font-black text-xl sm:text-2xl md:text-h1 uppercase text-white mb-2 truncate">{{ activeElection.name }}</h2>
             <p class="font-body text-xs md:text-sm text-blue-100 max-w-lg">
               Gunakan hak suara Anda untuk menentukan masa depan. Periode pemilihan sedang berlangsung!
             </p>
@@ -50,11 +50,11 @@
 
       <!-- Quick Action Bar -->
       <div class="flex flex-col sm:flex-row gap-3 mb-6 md:mb-8">
-        <Link :href="route('vote.index')" class="neo-btn-primary flex-1 text-xs py-3 justify-center">
+        <Link :href="route('vote.index')" class="neo-btn-sm-primary flex-1">
           <span class="material-symbols-outlined text-base">groups</span>
           LIHAT KANDIDAT
         </Link>
-        <Link :href="route('results.index')" class="neo-btn-secondary flex-1 text-xs py-3 justify-center">
+        <Link :href="route('results.index')" class="neo-btn-sm-secondary flex-1">
           <span class="material-symbols-outlined text-base">analytics</span>
           LIHAT ANALYTICS
         </Link>
@@ -116,10 +116,10 @@
             </h4>
             <p class="font-body text-[11px] md:text-xs text-neo-grey line-clamp-2 mb-3 flex-1">{{ candidate.vision }}</p>
             
-            <Link v-if="!user?.has_voted" :href="route('vote.index')" class="neo-btn-primary w-full text-[10px] md:text-xs py-2 justify-center">
+            <Link v-if="!user?.has_voted" :href="route('vote.index')" class="neo-btn-sm-primary w-full">
               LIHAT DETAIL KANDIDAT →
             </Link>
-            <div v-else class="neo-btn w-full text-[10px] md:text-xs py-2 bg-gray-100 text-neo-grey border-gray-300 shadow-none cursor-default justify-center">
+            <div v-else class="neo-btn-sm w-full bg-gray-100 text-neo-grey border-gray-300 shadow-none cursor-default pointer-events-none">
               ✓ SUDAH MEMILIH
             </div>
           </div>

@@ -4,7 +4,7 @@
     <div class="mb-5 flex">
       <Link 
         :href="route('admin.elections.index')" 
-        class="inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white font-heading text-[10px] md:text-xs font-black uppercase tracking-wider text-neo-black dark:text-white shadow-[3px_3px_0px_#000] dark:shadow-[3px_3px_0px_rgba(255,255,255,0.8)] hover:bg-neo-yellow dark:hover:bg-neo-yellow hover:text-neo-black dark:hover:text-neo-black hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0px_#000] dark:hover:shadow-[1.5px_1.5px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-100 group"
+        class="neo-btn-sm-secondary group"
       >
         <span class="material-symbols-outlined text-base font-bold group-hover:-translate-x-1 transition-transform text-neo-blue">arrow_back</span>
         KEMBALI KE DAFTAR PERIODE
@@ -46,7 +46,7 @@
         <div class="shrink-0 w-full md:w-auto">
           <Link 
             :href="route('admin.candidates.create', election.id)" 
-            class="neo-btn bg-neo-blue text-white w-full md:w-auto py-3 px-5 text-xs flex items-center justify-center gap-2 shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 uppercase font-heading font-black"
+            class="neo-btn-sm-primary w-full md:w-auto"
           >
             <span class="material-symbols-outlined text-base">person_add</span>
             TAMBAH KANDIDAT
@@ -84,8 +84,8 @@
           <p class="font-body text-[10px] md:text-xs text-neo-grey mb-3 flex-1 truncate">{{ candidate.class }}</p>
           
           <div class="flex gap-1.5 md:gap-2">
-            <Link :href="route('admin.candidates.edit', { election: election.id, candidate: candidate.id })" class="neo-btn-secondary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm flex-1 justify-center">EDIT</Link>
-            <button @click="confirmDelete(candidate)" class="neo-btn-danger text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">HAPUS</button>
+            <Link :href="route('admin.candidates.edit', { election: election.id, candidate: candidate.id })" class="neo-btn-sm-secondary flex-1">EDIT</Link>
+            <button @click="confirmDelete(candidate)" class="neo-btn-sm-danger flex-1">HAPUS</button>
           </div>
         </div>
       </div>

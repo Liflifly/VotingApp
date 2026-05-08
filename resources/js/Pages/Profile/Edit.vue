@@ -103,9 +103,9 @@
 
       <!-- RIGHT: Forms -->
       <div class="lg:col-span-2 space-y-6">
-        <div class="neo-card dark:bg-neo-dark-card dark:border-white dark:shadow-neo-white p-6 md:p-8 relative overflow-hidden">
+        <div class="neo-card dark:bg-neo-dark-card dark:border-white dark:shadow-neo-white p-4 sm:p-5 md:p-6 relative overflow-hidden">
           <div class="absolute top-0 right-0 px-4 py-1 bg-neo-black dark:bg-white text-white dark:text-neo-black font-heading font-black text-[10px] uppercase tracking-[0.2em]">01 / INFO</div>
-          <h2 class="font-heading font-black text-h2 uppercase mb-6 dark:text-white flex items-center gap-2">
+          <h2 class="font-heading font-black text-md sm:text-lg md:text-xl uppercase mb-4 md:mb-5 dark:text-white flex items-center gap-2">
             <span class="material-symbols-outlined text-neo-blue">badge</span> INFORMASI DASAR
           </h2>
           <form @submit.prevent="updateProfile">
@@ -118,7 +118,7 @@
               </div>
             </div>
 
-            <div class="grid md:grid-cols-2 gap-5 mb-6">
+            <div class="grid md:grid-cols-2 gap-4 mb-4 md:mb-5">
               <div>
                 <label class="block font-heading text-xs font-bold uppercase tracking-wider mb-2 dark:text-gray-300">NAMA LENGKAP</label>
                 <input v-model="profileForm.name" type="text" class="neo-input dark:bg-neo-dark-surface dark:text-white dark:border-white" required />
@@ -140,9 +140,9 @@
           </form>
         </div>
 
-        <div class="neo-card dark:bg-neo-dark-card dark:border-white dark:shadow-neo-white p-6 md:p-8 relative overflow-hidden">
+        <div class="neo-card dark:bg-neo-dark-card dark:border-white dark:shadow-neo-white p-4 sm:p-5 md:p-6 relative overflow-hidden">
           <div class="absolute top-0 right-0 px-4 py-1 bg-neo-yellow text-neo-black font-heading font-black text-[10px] uppercase tracking-[0.2em]">02 / KEAMANAN</div>
-          <h2 class="font-heading font-black text-h2 uppercase mb-6 dark:text-white flex items-center gap-2">
+          <h2 class="font-heading font-black text-md sm:text-lg md:text-xl uppercase mb-4 md:mb-5 dark:text-white flex items-center gap-2">
             <span class="material-symbols-outlined text-neo-yellow">lock</span> GANTI PASSWORD
           </h2>
           <form @submit.prevent="updatePassword">
@@ -155,7 +155,7 @@
               </div>
             </div>
 
-            <div class="space-y-4 mb-6">
+            <div class="space-y-3 mb-4 md:mb-5">
               <div>
                 <label class="block font-heading text-xs font-bold uppercase tracking-wider mb-2 dark:text-gray-300">PASSWORD SAAT INI</label>
                 <input v-model="passwordForm.current_password" type="password" class="neo-input dark:bg-neo-dark-surface dark:text-white dark:border-white" autocomplete="current-password" />

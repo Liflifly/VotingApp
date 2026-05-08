@@ -74,8 +74,55 @@
     .neo-btn-danger:hover {
         background-color: #b91c1c;
     }
+    .neo-btn-sm, .neo-btn-sm-primary, .neo-btn-sm-secondary, .neo-btn-sm-danger {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.8rem;
+        border: 2px solid #000;
+        font-family: 'Space Grotesk', sans-serif;
+        font-weight: 800;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        box-shadow: 2px 2px 0px #000;
+        transition: all 0.1s;
+        cursor: pointer;
+        user-select: none;
+    }
+    .neo-btn-sm:hover, .neo-btn-sm-primary:hover, .neo-btn-sm-secondary:hover, .neo-btn-sm-danger:hover {
+        box-shadow: 3px 3px 0px #000;
+        transform: translate(-0.5px, -0.5px);
+    }
+    .neo-btn-sm:active, .neo-btn-sm-primary:active, .neo-btn-sm-secondary:active, .neo-btn-sm-danger:active {
+        box-shadow: none;
+        transform: translate(1.5px, 1.5px);
+    }
+    .neo-btn-sm-primary {
+        background-color: #0048FF;
+        color: #fff;
+    }
+    .neo-btn-sm-primary:hover {
+        background-color: #FFDE00;
+        color: #000;
+    }
+    .neo-btn-sm-secondary {
+        background-color: #fff;
+        color: #000;
+    }
+    .neo-btn-sm-secondary:hover {
+        background-color: #FFDE00;
+    }
+    .neo-btn-sm-danger {
+        background-color: #FF3C3C;
+        color: #fff;
+    }
+    .neo-btn-sm-danger:hover {
+        background-color: #b91c1c;
+    }
     .neo-input {
-        @apply w-full px-4 py-3 border-neo border-neo-black bg-white 
+        @apply w-full px-3.5 py-2.5 border-neo border-neo-black bg-white 
                font-body text-body-md placeholder-neo-grey
                focus:outline-none focus:shadow-neo-blue focus:border-neo-blue
                transition-all duration-100;
@@ -288,6 +335,22 @@
 .dark .neo-btn:active { 
     box-shadow: none; 
     transform: translate(2px, 2px); 
+}
+.dark .neo-btn-sm-secondary {
+    background-color: var(--neo-dark-card); color: var(--neo-dark-text);
+    border-color: var(--neo-dark-border);
+    box-shadow: 2px 2px 0px var(--neo-dark-border);
+}
+.dark .neo-btn-sm { 
+    border-color: var(--neo-dark-border); 
+    box-shadow: 2px 2px 0px var(--neo-dark-border);
+}
+.dark .neo-btn-sm:hover, .dark .neo-btn-sm-primary:hover, .dark .neo-btn-sm-secondary:hover, .dark .neo-btn-sm-danger:hover { 
+    box-shadow: 3px 3px 0px var(--neo-dark-border);
+}
+.dark .neo-btn-sm:active, .dark .neo-btn-sm-primary:active, .dark .neo-btn-sm-secondary:active, .dark .neo-btn-sm-danger:active { 
+    box-shadow: none; 
+    transform: translate(1.5px, 1.5px); 
 }
 .dark .neo-input {
     background-color: var(--neo-dark-surface); color: var(--neo-dark-text);

@@ -8,9 +8,9 @@
           KOSGORO<span class="text-neo-blue">&#8482;</span>
         </div>
         <div class="hidden md:flex items-center gap-1">
-          <a href="#about" class="neo-btn-secondary dark:bg-neo-dark-card dark:text-white dark:border-white text-xs py-2 px-4 shadow-neo-sm">TENTANG</a>
-          <a href="#features" class="neo-btn-secondary dark:bg-neo-dark-card dark:text-white dark:border-white text-xs py-2 px-4 shadow-neo-sm">FITUR</a>
-          <a href="#faq" class="neo-btn-secondary dark:bg-neo-dark-card dark:text-white dark:border-white text-xs py-2 px-4 shadow-neo-sm">FAQ</a>
+          <a href="#about" class="neo-btn-sm-secondary">TENTANG</a>
+          <a href="#features" class="neo-btn-sm-secondary">FITUR</a>
+          <a href="#faq" class="neo-btn-sm-secondary">FAQ</a>
         </div>
         <div class="flex items-center gap-2">
           <!-- Dark mode toggle -->
@@ -67,21 +67,21 @@
           BELUM ADA PEMILIHAN
         </div>
 
-        <h1 class="font-heading font-black text-[36px] sm:text-[48px] md:text-display uppercase leading-[1.0] tracking-tight text-neo-black mb-4 md:mb-6">
+        <h1 class="font-heading font-black text-[36px] sm:text-[48px] md:text-display uppercase leading-[1.0] tracking-tight text-neo-black dark:text-white mb-4 md:mb-6">
           SUARAMU<br>
           <span class="text-neo-blue">MENENTUKAN</span><br>
           PEMIMPIN KITA
         </h1>
 
-        <p class="font-body text-base md:text-body-lg text-neo-grey max-w-2xl mx-auto mb-8 md:mb-10 px-2">
+        <p class="font-body text-base md:text-body-lg text-neo-grey dark:text-gray-400 max-w-2xl mx-auto mb-8 md:mb-10 px-2">
           Sistem pemilihan digital terpercaya. Pilih kandidat Anda, pantau pergerakan suara secara real-time, dan tentukan masa depan hari ini.
         </p>
 
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4 sm:px-0">
-          <Link :href="route('login')" class="neo-btn-primary text-sm sm:text-base py-3 sm:py-4 px-8 sm:px-10 shadow-neo">
+          <Link :href="route('login')" class="neo-btn-primary">
             MASUK KE SISTEM →
           </Link>
-          <Link :href="route('register')" class="neo-btn-secondary text-sm sm:text-base py-3 sm:py-4 px-8 sm:px-10 shadow-neo">
+          <Link :href="route('register')" class="neo-btn-secondary bg-white hover:bg-neo-yellow text-neo-black">
             DAFTAR BARU
           </Link>
         </div>
@@ -185,11 +185,11 @@
         <div class="space-y-3 md:space-y-4">
           <div v-for="(faq, i) in faqs" :key="i" class="neo-card overflow-hidden">
             <button @click="toggleFaq(i)" class="w-full p-4 md:p-5 flex items-center justify-between text-left hover:bg-neo-yellow/5 transition-colors">
-              <span class="font-heading font-bold text-xs md:text-sm uppercase tracking-wider pr-4">{{ faq.q }}</span>
+              <span class="font-heading font-bold text-xs md:text-sm uppercase tracking-wider pr-4 dark:text-white">{{ faq.q }}</span>
               <span class="material-symbols-outlined text-neo-blue shrink-0 transition-transform duration-200" :class="openFaq === i ? 'rotate-45' : ''">add</span>
             </button>
-            <div v-if="openFaq === i" class="px-4 md:px-5 pb-4 md:pb-5 border-t-2 border-dashed border-gray-200">
-              <p class="font-body text-sm text-neo-grey pt-3 md:pt-4 leading-relaxed">{{ faq.a }}</p>
+            <div v-if="openFaq === i" class="px-4 md:px-5 pb-4 md:pb-5 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+              <p class="font-body text-sm text-neo-grey dark:text-gray-400 pt-3 md:pt-4 leading-relaxed">{{ faq.a }}</p>
             </div>
           </div>
         </div>
@@ -245,32 +245,13 @@
         </div>
       </div>
     </footer>
-    <!-- Scroll to Top Button -->
-    <Transition
-      enter-active-class="transition-all duration-200 ease-out"
-      enter-from-class="opacity-0 translate-y-4 scale-75"
-      enter-to-class="opacity-100 translate-y-0 scale-100"
-      leave-active-class="transition-opacity duration-200 ease-in"
-      leave-from-class="opacity-100"
-      leave-to-class="opacity-0"
-    >
-      <button 
-        v-show="showScrollTop"
-        @click="scrollToTop"
-        class="fixed z-[9999] bottom-24 left-[calc(100%-4.5rem)] w-12 h-12 bg-neo-yellow text-neo-black border-[3px] border-neo-black dark:border-white shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:bg-neo-blue hover:text-white hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none hover:translate-x-[1.5px] hover:translate-y-[1.5px] transition-all duration-300 flex items-center justify-center focus:outline-none"
-        aria-label="Scroll to top"
-      >
-        <span class="material-symbols-outlined font-bold text-xl">arrow_upward</span>
-      </button>
-    </Transition>
-
     <NeoToast />
   </div>
 </template>
 
 <script setup>
 import { Link, router } from '@inertiajs/vue3';
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref } from 'vue';
 import NeoToast from '@/Components/NeoToast.vue';
 import { useDarkMode } from '@/Composables/useDarkMode.js';
 
@@ -308,41 +289,4 @@ const faqs = [
     a: 'Gunakan fitur "Lupa Password" di halaman login untuk mereset password melalui email yang terdaftar. Jika masih bermasalah, hubungi admin sekolah.'
   },
 ];
-
-const showScrollTop = ref(false);
-const isScrollingToTop = ref(false);
-
-const handleScroll = () => {
-  if (isScrollingToTop.value) return;
-
-  const scrollTop = window.scrollY || document.documentElement.scrollTop;
-  showScrollTop.value = scrollTop > 300;
-};
-
-onMounted(() => {
-  window.addEventListener('scroll', handleScroll);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', handleScroll);
-});
-
-const scrollToTop = () => {
-  isScrollingToTop.value = true;
-  showScrollTop.value = false;
-
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth'
-  });
-
-  setTimeout(() => {
-    isScrollingToTop.value = false;
-  }, 800);
-};
-
-router.on('navigate', () => { 
-  showScrollTop.value = false;
-  isScrollingToTop.value = false;
-});
 </script>

@@ -13,8 +13,8 @@
           </h1>
           <p class="font-body text-xs md:text-sm text-neo-grey mt-1">Manajemen siklus pemilihan Kosgoro</p>
         </div>
-        <Link :href="route('admin.elections.create')" class="neo-btn-primary text-[10px] md:text-xs py-2 md:py-2.5 px-4 md:px-6">
-          <span class="material-symbols-outlined text-base">add</span>
+        <Link :href="route('admin.elections.create')" class="neo-btn-sm-primary">
+          <span class="material-symbols-outlined text-sm font-bold">add</span>
           BUAT PERIODE BARU
         </Link>
       </div>
@@ -48,18 +48,18 @@
             </div>
           </div>
           <div class="flex flex-wrap gap-1.5 md:gap-2 md:shrink-0">
-            <Link :href="route('admin.elections.show', election.id)" class="neo-btn-secondary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">DETAIL</Link>
-            <Link v-if="election.status === 'draft' || election.status === 'active'" :href="route('admin.elections.edit', election.id)" class="neo-btn-secondary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">EDIT</Link>
-            <Link :href="route('admin.candidates.index', election.id)" class="neo-btn-secondary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">KANDIDAT</Link>
+            <Link :href="route('admin.elections.show', election.id)" class="neo-btn-sm-secondary">DETAIL</Link>
+            <Link v-if="election.status === 'draft' || election.status === 'active'" :href="route('admin.elections.edit', election.id)" class="neo-btn-sm-secondary">EDIT</Link>
+            <Link :href="route('admin.candidates.index', election.id)" class="neo-btn-sm-secondary">KANDIDAT</Link>
             <button 
               v-if="election.status === 'draft'" 
               @click="handleActivateClick(election)" 
-              class="neo-btn-primary text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm"
+              class="neo-btn-sm-primary"
             >
               AKTIFKAN
             </button>
-            <button v-if="election.status === 'draft'" @click="promptAction(route('admin.elections.destroy', election.id), 'Hapus Draft?', 'Periode ini beserta seluruh kandidat di dalamnya akan dihapus permanen.', 'Ya, Hapus!', 'bg-neo-red', 'delete')" class="neo-btn-danger text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">HAPUS</button>
-            <button v-if="election.status === 'active'" @click="promptAction(route('admin.elections.end', election.id), 'Akhiri Periode?', 'Tindakan ini tidak dapat dibatalkan.', 'Ya, Akhiri!', 'bg-neo-red')" class="neo-btn-danger text-[9px] md:text-[10px] py-1.5 md:py-2 px-3 md:px-4 shadow-neo-sm">AKHIRI</button>
+            <button v-if="election.status === 'draft'" @click="promptAction(route('admin.elections.destroy', election.id), 'Hapus Draft?', 'Periode ini beserta seluruh kandidat di dalamnya akan dihapus permanen.', 'Ya, Hapus!', 'bg-neo-red', 'delete')" class="neo-btn-sm-danger">HAPUS</button>
+            <button v-if="election.status === 'active'" @click="promptAction(route('admin.elections.end', election.id), 'Akhiri Periode?', 'Tindakan ini tidak dapat dibatalkan.', 'Ya, Akhiri!', 'bg-neo-red')" class="neo-btn-sm-danger">AKHIRI</button>
           </div>
         </div>
       </div>
