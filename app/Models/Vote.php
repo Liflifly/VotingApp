@@ -8,22 +8,30 @@ class Vote extends Model
 {
     protected $fillable = [
         'user_id',
-        'candidate_id',
+        'event_id',
         'election_id',
+        'candidate_id',
     ];
+
+    // ─── Relationships ───────────────────────────────────────────────────────
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function candidate()
+    public function event()
     {
-        return $this->belongsTo(Candidate::class);
+        return $this->belongsTo(Event::class);
     }
 
     public function election()
     {
         return $this->belongsTo(Election::class);
+    }
+
+    public function candidate()
+    {
+        return $this->belongsTo(Candidate::class);
     }
 }

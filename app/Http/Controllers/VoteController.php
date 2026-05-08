@@ -4,127 +4,143 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidate;
 use App\Models\Election;
+use App\Models\Event;
 use App\Models\Vote;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class VoteController extends Controller
 {
-    public function index()
+    public function index(Request $request, Event $event)
     {
-        $user = Auth::user();
-        $activeElection = Election::active()->first();
+        $user           = Auth::user();
+        $activeElection = $event->activeElection();
 
         if (! $activeElection) {
-            return \Inertia\Inertia::render('Vote/Index', [
-                'user'           => $user,
-                'activeElection' => null,
+            return Inertia::render('Vote/Index', [
+                'activeElection'  => null,
+                'candidates'      => [],
+                'totalVotes'      => 0,
+                'hasVoted'        => false,
             ]);
         }
 
-        $candidates = Candidate::where('election_id', $activeElection->id)
+        $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
+        $candidates      = Candidate::where('election_id', $activeElection->id)
             ->withCount('votes')
             ->orderBy('order_number')
-            ->get();
+            ->get()
+            ->map(fn ($c) => [
+                'id'           => $c->id,
+                'order_number' => $c->order_number,
+                'fields'       => $c->fields,
+                'photo_url'    => $c->photo_url,
+                'votes_count'  => $c->votes_count,
+            ]);
 
         $totalVotes = Vote::where('election_id', $activeElection->id)->count();
+        $hasVoted   = $user->hasVotedInElection($activeElection);
 
-        return \Inertia\Inertia::render('Vote/Index', [
-            'candidates'     => $candidates,
-            'user'           => $user,
-            'activeElection' => $activeElection,
-            'totalVotes'     => $totalVotes,
+        return Inertia::render('Vote/Index', [
+            'activeElection'  => $activeElection,
+            'candidates'      => $candidates,
+            'candidateFields' => $candidateFields,
+            'totalVotes'      => $totalVotes,
+            'hasVoted'        => $hasVoted,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, Event $event)
     {
         $user = Auth::user();
 
-        return DB::transaction(function () use ($request, $user) {
+        // Only voters can cast votes
+        if (! in_array($request->get('_event_role'), ['voter'])) {
+            return back()->with('error', 'Only registered voters can cast votes.');
+        }
+
+        return DB::transaction(function () use ($request, $user, $event) {
             $data = $request->validate([
                 'candidate_id' => ['required', 'exists:candidates,id'],
             ]);
 
-            $activeElection = Election::active()->lockForUpdate()->first();
+            $activeElection = $event->elections()
+                ->active()
+                ->lockForUpdate()
+                ->first();
 
             if (! $activeElection) {
-                return back()->with('error', 'Waduh, belum ada panggung pemilihan yang buka, nih.');
+                return back()->with('error', 'No active election at this time.');
             }
 
-            if (in_array($user->role, ['admin', 'super_admin'])) {
-                return back()->with('error', 'Maaf, Anda tidak dapat melakukan vote karena bukan akun siswa.');
-            }
-
-            // BUG-02 FIX: Fresh check dari DB + query ke tabel votes (source of truth)
-            $user->refresh();
+            // Check for double-vote (fresh from DB)
             if ($user->hasVotedInElection($activeElection)) {
-                return back()->with('error', 'Ups! Kamu sudah nyoblos, masa mau dua kali?');
+                return back()->with('error', 'You have already cast your vote in this election.');
             }
 
-            // Pastikan kandidat memang milik election yang aktif
+            // Ensure candidate belongs to this election
             $candidate = Candidate::where('id', $data['candidate_id'])
                 ->where('election_id', $activeElection->id)
                 ->first();
 
             if (! $candidate) {
-                return back()->with('error', 'Eh, kandidat ini nyasar atau bukan dari periode ini.');
+                return back()->with('error', 'Invalid candidate for this election.');
             }
 
             try {
-                // BUG-01 FIX: Tangkap UniqueConstraintViolationException dari race condition.
-                // DB unique constraint (user_id, election_id) berfungsi sebagai safety net terakhir.
+                // DB unique constraint on (user_id, election_id) catches race conditions
                 Vote::create([
                     'user_id'      => $user->id,
-                    'candidate_id' => $data['candidate_id'],
+                    'event_id'     => $event->id,
                     'election_id'  => $activeElection->id,
+                    'candidate_id' => $data['candidate_id'],
                 ]);
-
-                // SEC-01 FIX: Update langsung via explicit assignment, bukan via fillable
-                $user->has_voted        = true;
-                $user->voted_election_id = $activeElection->id;
-                $user->save();
-            } catch (UniqueConstraintViolationException $e) {
-                // Race condition tertangkap — user berhasil submit dua request serentak
-                return back()->with('error', 'Ups! Suaramu sudah tercatat. Tidak bisa memilih dua kali.');
+            } catch (UniqueConstraintViolationException) {
+                return back()->with('error', 'Your vote was already recorded.');
             }
 
-            return redirect()->route('results.index')->with('success', 'Keren! Suaramu udah aman tercatat di kotak suara.');
+            return redirect()->route('events.results', $event)
+                ->with('success', 'Your vote has been recorded!');
         });
     }
 
-    /**
-     * BUG FIX: Sebelumnya results() tidak filter by election,
-     * sehingga menampilkan semua suara dari semua election dicampur.
-     * Sekarang filter by active election (atau election terakhir jika sudah selesai).
-     */
-    public function results()
+    public function results(Request $request, Event $event)
     {
-        // Coba ambil election aktif dulu, kalau tidak ada ambil yang terakhir (ended)
-        $election = Election::active()->first()
-                ?? Election::where('status', 'ended')->latest()->first();
+        $election = $event->elections()->active()->first()
+            ?? $event->elections()->where('status', 'ended')->latest()->first();
 
         if (! $election) {
-            return \Inertia\Inertia::render('Results/Index', [
-                'candidates' => collect(),
-                'totalVotes' => 0,
-                'election'   => null,
+            return Inertia::render('Results/Index', [
+                'candidates'      => [],
+                'totalVotes'      => 0,
+                'election'        => null,
+                'candidateFields' => [],
             ]);
         }
 
-        $candidates = Candidate::where('election_id', $election->id)
+        $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
+        $candidates      = Candidate::where('election_id', $election->id)
             ->withCount('votes')
             ->orderBy('order_number')
-            ->get();
+            ->get()
+            ->map(fn ($c) => [
+                'id'           => $c->id,
+                'order_number' => $c->order_number,
+                'fields'       => $c->fields,
+                'photo_url'    => $c->photo_url,
+                'votes_count'  => $c->votes_count,
+            ]);
 
         $totalVotes = Vote::where('election_id', $election->id)->count();
 
-        return \Inertia\Inertia::render('Results/Index', [
-            'candidates' => $candidates,
-            'totalVotes' => $totalVotes,
-            'election'   => $election,
+        return Inertia::render('Results/Index', [
+            'candidates'      => $candidates,
+            'totalVotes'      => $totalVotes,
+            'election'        => $election,
+            'candidateFields' => $candidateFields,
         ]);
     }
 }

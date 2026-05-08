@@ -2,167 +2,131 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Candidate;
 use App\Models\Election;
-use App\Models\User;
+use App\Models\Event;
+use App\Models\Vote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class AdminElectionController extends Controller
 {
-    public function index()
+    public function index(Event $event)
     {
-        $elections = Election::latest()->get();
+        $elections = $event->elections()->latest()->get();
 
-        return \Inertia\Inertia::render('Admin/Elections/Index', compact('elections'));
+        return Inertia::render('Admin/Elections/Index', compact('event', 'elections'));
     }
 
-    public function create()
+    public function create(Event $event)
     {
-        return \Inertia\Inertia::render('Admin/Elections/Create');
+        return Inertia::render('Admin/Elections/Create', compact('event'));
     }
 
-    /**
-     * BUG FIX: Sebelumnya pakai $request->all() → rawan mass assignment attack.
-     * Sekarang hanya ambil field yang sudah divalidasi.
-     */
-    public function store(Request $request)
+    public function store(Request $request, Event $event)
     {
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'starts_at' => 'required|date',
-            'ends_at'   => 'required|date|after:starts_at',
-            'notes'     => 'nullable|string',
+            'name'      => ['required', 'string', 'max:255'],
+            'starts_at' => ['required', 'date'],
+            'ends_at'   => ['required', 'date', 'after:starts_at'],
+            'notes'     => ['nullable', 'string'],
         ]);
 
-        Election::create($validated);
+        $event->elections()->create($validated);
 
-        return redirect()->route('admin.elections.index')
-            ->with('success', 'Yuhu! Periode pemilihan baru siap meramaikan suasana.');
+        return redirect()->route('events.admin.elections.index', $event)
+            ->with('success', 'Election period created.');
     }
 
-    public function show(Election $election)
+    public function show(Event $event, Election $election)
     {
-        $election->load('candidates.votes');
-        $totalVoters = User::where('role', 'user')->count();
+        $election->load('candidates');
+        $totalVoters = $event->users()->wherePivot('role', 'voter')->count();
 
-        return \Inertia\Inertia::render('Admin/Elections/Show', compact('election', 'totalVoters'));
+        return Inertia::render('Admin/Elections/Show', compact('event', 'election', 'totalVoters'));
     }
 
-    public function edit(?Election $election = null)
+    public function edit(Event $event, Election $election)
     {
-        if (! $election) {
-            $election = Election::query()->latest('id')->first();
-
-            // BUG-04 FIX: Typo path sebelumnya 'Admin/Election/Edit' (tanpa 's')
-            return \Inertia\Inertia::render('Admin/Elections/Edit', compact('election'));
+        if (! in_array($election->status, ['draft', 'active'])) {
+            return redirect()->route('events.admin.elections.show', [$event, $election])
+                ->with('error', 'Only Draft or Active elections can be edited.');
         }
 
-        if ($election->status !== 'draft' && $election->status !== 'active') {
-            return redirect()->route('admin.elections.show', $election)
-                ->with('error', 'Waduh, cuma periode dengan status Draft atau Aktif yang boleh dimodif!');
-        }
-
-        return \Inertia\Inertia::render('Admin/Elections/Edit', compact('election'));
+        return Inertia::render('Admin/Elections/Edit', compact('event', 'election'));
     }
 
-    /**
-     * BUG FIX: Sama seperti store(), sebelumnya update juga pakai $request->all().
-     */
-    public function update(Request $request, ?Election $election = null)
+    public function update(Request $request, Event $event, Election $election)
     {
-        // Backward compatibility: route lama tanpa election ID
-        if (! $election) {
-            $data = $request->validate([
-                'name'     => ['nullable', 'string', 'max:255'],
-                'starts_at' => ['nullable', 'date'],
-                'ends_at'   => ['nullable', 'date', 'after:starts_at'],
-            ]);
-
-            if (empty($data['name'])) {
-                $data['name'] = 'Pemilihan Umum';
-            }
-
-            $election = Election::query()->latest('id')->first();
-            if (! $election) {
-                $election = Election::create($data);
-            } else {
-                $election->update($data);
-            }
-
-            return redirect()->route('admin.election.edit')
-                ->with('success', 'Beres! Waktu pemilihan sudah disetel ulang dengan mantap.');
+        if (! in_array($election->status, ['draft', 'active'])) {
+            return redirect()->route('events.admin.elections.show', [$event, $election])
+                ->with('error', 'Only Draft or Active elections can be edited.');
         }
 
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'starts_at' => 'required|date',
-            'ends_at'   => 'required|date|after:starts_at',
-            'notes'     => 'nullable|string',
+            'name'      => ['required', 'string', 'max:255'],
+            'starts_at' => ['required', 'date'],
+            'ends_at'   => ['required', 'date', 'after:starts_at'],
+            'notes'     => ['nullable', 'string'],
         ]);
-
-        if ($election->status !== 'draft' && $election->status !== 'active') {
-            return redirect()->route('admin.elections.show', $election)
-                ->with('error', 'Waduh, cuma periode dengan status Draft atau Aktif yang boleh dimodif!');
-        }
 
         $election->update($validated);
 
-        return redirect()->route('admin.elections.index')
-            ->with('success', 'Mantap! Info periode sudah di-update secara optimal.');
+        return redirect()->route('events.admin.elections.index', $event)
+            ->with('success', 'Election updated.');
     }
 
-    public function destroy(Election $election)
+    public function destroy(Event $event, Election $election)
     {
         if ($election->status !== 'draft') {
-            return back()->with('error', 'Hanya periode berstatus Draft yang bisa dihapus!');
+            return back()->with('error', 'Only Draft elections can be deleted.');
         }
 
         $election->delete();
 
-        return redirect()->route('admin.elections.index')
-            ->with('success', 'Sip! Draft periode berhasil dihapus.');
+        return redirect()->route('events.admin.elections.index', $event)
+            ->with('success', 'Election deleted.');
     }
 
-    public function activate(Election $election)
+    public function activate(Request $request, Event $event, Election $election)
     {
-        if (now() < \Illuminate\Support\Carbon::parse($election->starts_at)) {
-            $startTime = \Illuminate\Support\Carbon::parse($election->starts_at)->translatedFormat('d F Y, H.i');
-            return back()->with('error', "Waduh, belum masuk waktu mulai periode! Periode ini baru bisa diaktifkan mulai {$startTime}.");
+        if ($election->starts_at && now()->lt($election->starts_at)) {
+            return back()->with('error', 'Election start time has not been reached yet.');
         }
 
         if ($election->candidates()->count() < 2) {
-            return back()->with('error', 'Waduh, minimal harus ada 2 kandidat untuk memulai pemilihan!');
+            return back()->with('error', 'At least 2 candidates are required to start an election.');
         }
 
-        DB::transaction(function () use ($election) {
-            Election::where('id', '!=', $election->id)->update(['status' => 'ended']);
+        DB::transaction(function () use ($event, $election) {
+            // End any other active elections in this event
+            $event->elections()->where('id', '!=', $election->id)->update(['status' => 'ended']);
             $election->update(['status' => 'active']);
-
-            // BUG-03 FIX: Hanya reset user dengan role 'user', bukan admin/super_admin.
-            User::where('role', 'user')->update(['has_voted' => false, 'voted_election_id' => null]);
         });
 
-        return redirect()->route('admin.elections.index')
-            ->with('success', 'Gas! Pemilihan resmi dimulai. Let the best win!');
+        return redirect()->route('events.admin.elections.index', $event)
+            ->with('success', 'Election is now active!');
     }
 
-    public function end(Election $election)
+    public function end(Event $event, Election $election)
     {
-        DB::transaction(function () use ($election) {
+        DB::transaction(function () use ($event, $election) {
+            $totalVoters = $event->users()->wherePivot('role', 'voter')->count();
             $election->update([
                 'status'       => 'ended',
-                'total_voters' => User::where('role', 'user')->count(),
+                'total_voters' => $totalVoters,
             ]);
         });
 
-        return redirect()->route('admin.elections.index')
-            ->with('success', 'Dan... cut! Waktu pemilihan ini resmi ditutup.');
+        return redirect()->route('events.admin.elections.index', $event)
+            ->with('success', 'Election ended. Results are now final.');
     }
 
-    public function history()
+    public function history(Event $event)
     {
-        $elections = Election::where('status', 'ended')->latest()->get();
+        $elections = $event->elections()->where('status', 'ended')->latest()->get();
 
-        return \Inertia\Inertia::render('Admin/Elections/History', compact('elections'));
+        return Inertia::render('Admin/Elections/History', compact('event', 'elections'));
     }
 }

@@ -4,44 +4,50 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidate;
 use App\Models\Election;
-use App\Models\User;
+use App\Models\Event;
 use App\Models\Vote;
+use Inertia\Inertia;
 
 class AdminResultController extends Controller
 {
-    /**
-     * BUG FIX: Sebelumnya mengambil semua kandidat & votes tanpa filter election,
-     * sehingga hasil dari berbagai periode bercampur dan totalnya salah.
-     * Sekarang filter by election yang dipilih (default: active atau latest ended).
-     */
-    public function index()
+    public function index(Event $event)
     {
-        // Ambil semua election untuk dropdown filter
-        $elections = Election::latest()->get();
+        $elections = $event->elections()->latest()->get();
 
-        $selectedElection = Election::where('status', 'active')->first()
-            ?? Election::where('status', 'ended')->latest()->first()
-            ?? Election::latest()->first();
+        $selectedElection = $event->elections()->where('status', 'active')->first()
+            ?? $event->elections()->where('status', 'ended')->latest()->first()
+            ?? $event->elections()->latest()->first();
 
-        $results = collect();
-        $totalVotes = 0;
-        $totalVoters = User::where('role', 'user')->count();
+        $results     = collect();
+        $totalVotes  = 0;
+        $totalVoters = $event->users()->wherePivot('role', 'voter')->count();
+        $candidateFields = collect();
 
         if ($selectedElection) {
-            $results = Candidate::where('election_id', $selectedElection->id)
+            $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
+            $results         = Candidate::where('election_id', $selectedElection->id)
                 ->withCount('votes')
                 ->orderByDesc('votes_count')
-                ->get();
+                ->get()
+                ->map(fn ($c) => [
+                    'id'           => $c->id,
+                    'order_number' => $c->order_number,
+                    'fields'       => $c->fields,
+                    'photo_url'    => $c->photo_url,
+                    'votes_count'  => $c->votes_count,
+                ]);
 
             $totalVotes = Vote::where('election_id', $selectedElection->id)->count();
         }
 
-        return \Inertia\Inertia::render('Admin/Results/Index', compact(
+        return Inertia::render('Admin/Results/Index', compact(
+            'event',
             'results',
             'totalVoters',
             'totalVotes',
             'elections',
-            'selectedElection'
+            'selectedElection',
+            'candidateFields',
         ));
     }
 }

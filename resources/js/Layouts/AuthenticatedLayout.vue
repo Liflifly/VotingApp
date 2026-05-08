@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-neo-surface dark:bg-neo-dark-bg relative">
+  <div :class="['min-h-screen bg-neo-surface dark:bg-neo-dark-bg relative', themeClass]">
 
     <!-- Sidebar Overlay (Mobile) -->
     <Transition
@@ -23,14 +23,14 @@
       <div class="p-4 border-b-neo border-neo-black dark:border-white relative overflow-hidden shrink-0 flex items-center justify-between">
         <div v-if="!sidebarCollapsed" class="absolute top-0 right-0 w-10 h-10 bg-neo-yellow border-l-2 border-b-2 border-neo-black dark:border-white"></div>
         <div v-if="!sidebarCollapsed" class="font-heading font-black text-xl tracking-tight relative z-10 dark:text-white">
-          KOSGORO<span class="text-neo-blue">&#8482;</span>
+          VUWOTING<span class="text-neo-blue">&#8482;</span>
         </div>
         <div v-else class="font-heading font-black text-base tracking-tight relative z-10 dark:text-white mx-auto">
-          <span class="text-neo-blue">K&#8482;</span>
+          <span class="text-neo-blue">V&#8482;</span>
         </div>
       </div>
 
-      <!-- NEW NEO-BRUTALIST SIDEBAR TOGGLE HANDLE -->
+      <!-- Sidebar Toggle Handle -->
       <button
         @click="toggleSidebar()"
         class="hidden lg:flex absolute -right-4 top-24 w-8 h-12 bg-neo-yellow border-neo border-neo-black dark:border-white z-50 items-center justify-center shadow-neo hover:shadow-neo-hover hover:-translate-x-1 transition-all group focus:outline-none"
@@ -39,6 +39,12 @@
           chevron_left
         </span>
       </button>
+
+      <!-- Event Context Banner -->
+      <div v-if="currentEvent && !sidebarCollapsed" class="mx-3 mt-3 p-2.5 bg-neo-blue/10 dark:bg-neo-blue/20 border-2 border-neo-blue/30 shrink-0">
+        <div class="font-heading text-[9px] font-bold text-neo-blue uppercase tracking-wider mb-0.5">CURRENT EVENT</div>
+        <div class="font-heading text-xs font-black truncate dark:text-white">{{ currentEvent.name }}</div>
+      </div>
 
       <!-- User Info (expanded) -->
       <div v-if="user && !sidebarCollapsed" class="mx-3 mt-3 p-3 border-neo border-neo-black dark:border-white bg-neo-surface dark:bg-neo-dark-surface relative overflow-hidden shrink-0">
@@ -56,7 +62,7 @@
                 user.role === 'super_admin' ? 'bg-neo-red text-white' :
                 user.role === 'admin' ? 'bg-neo-blue text-white' :
                 'bg-gray-100 dark:bg-gray-700 dark:text-white text-neo-black'
-              ]">{{ user.role?.toUpperCase() }}</span>
+              ]">{{ user.role?.replace('_', ' ').toUpperCase() }}</span>
             </div>
           </div>
         </div>
@@ -65,7 +71,6 @@
       <!-- User avatar (collapsed) -->
       <div v-if="user && sidebarCollapsed" class="mx-2 mt-3 flex justify-center shrink-0">
         <div class="w-9 h-9 bg-neo-blue border-2 border-neo-black dark:border-white flex items-center justify-center overflow-hidden">
-          <!-- UI-02 FIX: Gunakan user.avatar langsung (sudah full URL dari HandleInertiaRequests) -->
           <img v-if="user.avatar" :src="user.avatar" :alt="user.name" class="w-full h-full object-cover">
           <span v-else class="material-symbols-outlined text-white text-lg">person</span>
         </div>
@@ -73,23 +78,24 @@
 
       <!-- Navigation -->
       <nav class="flex-1 overflow-y-scroll neo-scrollbar px-2 mt-3 space-y-1 pb-4" style="-webkit-overflow-scrolling: touch;">
-        <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label dark:text-gray-400 px-1">MENU UTAMA</div>
+        <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label dark:text-gray-400 px-1">MAIN MENU</div>
 
-        <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')" icon="grid_view" label="Dashboard" :collapsed="sidebarCollapsed" />
-        <SidebarLink :href="route('vote.index')" :active="route().current('vote.*')" icon="how_to_vote" label="Live Ballots" :collapsed="sidebarCollapsed" />
-        <SidebarLink :href="route('results.index')" :active="route().current('results.*')" icon="analytics" label="Voter Analytics" :collapsed="sidebarCollapsed" />
-        <SidebarLink :href="route('profile.edit')" :active="route().current('profile.*')" icon="manage_accounts" label="Profil Saya" :collapsed="sidebarCollapsed" />
+        <SidebarLink v-if="currentEvent" :href="route('events.dashboard', currentEvent.slug)" :active="route().current('events.dashboard')" icon="grid_view" label="Dashboard" :collapsed="sidebarCollapsed" />
+        <SidebarLink v-if="currentEvent" :href="route('events.vote.index', currentEvent.slug)" :active="route().current('events.vote.*')" icon="how_to_vote" label="Live Ballots" :collapsed="sidebarCollapsed" />
+        <SidebarLink v-if="currentEvent" :href="route('events.results', currentEvent.slug)" :active="route().current('events.results')" icon="analytics" label="Results" :collapsed="sidebarCollapsed" />
+        <SidebarLink :href="route('profile.edit')" :active="route().current('profile.*')" icon="manage_accounts" label="My Profile" :collapsed="sidebarCollapsed" />
 
         <!-- Admin Nav -->
-        <template v-if="isAdmin">
+        <template v-if="isAdmin && currentEvent">
           <div class="pt-3 mt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
             <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label flex items-center gap-2 dark:text-gray-400">
               <span class="w-2 h-2 bg-neo-red animate-pulse"></span>
               ADMIN ZONE
             </div>
           </div>
-          <SidebarLink :href="route('admin.results.index')" :active="route().current('admin.results.*')" icon="leaderboard" label="Hasil Admin" :collapsed="sidebarCollapsed" />
-          <SidebarLink :href="route('admin.elections.index')" :active="route().current('admin.elections.*') || route().current('admin.candidates.*')" icon="event" label="Kelola Periode" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.admin.results', currentEvent.slug)" :active="route().current('events.admin.results')" icon="leaderboard" label="Admin Results" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.admin.elections.index', currentEvent.slug)" :active="route().current('events.admin.elections.*') || route().current('events.admin.candidates.*')" icon="event" label="Manage Elections" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.admin.users.index', currentEvent.slug)" :active="route().current('events.admin.users.*')" icon="group" label="Members" :collapsed="sidebarCollapsed" />
 
           <template v-if="user?.role === 'super_admin'">
             <div class="pt-2 mt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
@@ -98,7 +104,7 @@
                 SUPER ADMIN
               </div>
             </div>
-            <SidebarLink :href="route('admin.users.index')" :active="route().current('admin.users.*')" icon="admin_panel_settings" label="Kelola Admin" :collapsed="sidebarCollapsed" />
+            <SidebarLink :href="route('events.admin.settings', currentEvent.slug)" :active="route().current('events.admin.settings')" icon="settings" label="Event Settings" :collapsed="sidebarCollapsed" />
           </template>
         </template>
       </nav>
@@ -110,10 +116,10 @@
           <Link :href="route('logout')" method="post" as="button"
             :class="['neo-btn-danger border-neo-black dark:border-white w-full text-xs py-2.5', sidebarCollapsed ? 'px-0 justify-center' : '']">
             <span class="material-symbols-outlined text-base">logout</span>
-            <span v-if="!sidebarCollapsed" class="font-bold tracking-wider">KELUAR</span>
+            <span v-if="!sidebarCollapsed" class="font-bold tracking-wider">SIGN OUT</span>
           </Link>
           <div v-if="!sidebarCollapsed" class="text-center mt-2">
-            <span class="font-heading text-[8px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-[0.2em]">KOSGORO&#8482; SYSTEM V1.0</span>
+            <span class="font-heading text-[8px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-[0.2em]">VUWOTING&#8482; SYSTEM V2.0</span>
           </div>
         </div>
       </div>
@@ -133,19 +139,18 @@
         <div class="hidden lg:flex items-center justify-between px-8 h-14 relative z-10">
           <h1 class="font-heading font-bold text-sm uppercase tracking-wider">{{ title }}</h1>
           <div class="flex items-center gap-4">
-            <!-- Dark mode toggle -->
-            <button @click="toggleDark()"
+            <button @click="toggle()"
               class="w-9 h-9 border-2 border-white/40 hover:border-white flex items-center justify-center hover:bg-white/10 transition-colors"
-              :title="isDark ? 'Mode Terang' : 'Mode Gelap'">
+              :title="isDark ? 'Light Mode' : 'Dark Mode'">
               <span class="material-symbols-outlined text-base">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
             </button>
             <div class="flex items-center gap-2">
-              <span :class="['w-2 h-2', $page.props.activeElection ? 'bg-neo-yellow animate-pulse' : 'bg-gray-500']"></span>
+              <span :class="['w-2 h-2', activeElection ? 'bg-neo-yellow animate-pulse' : 'bg-gray-500']"></span>
               <span class="font-heading text-[10px] font-bold text-gray-400 uppercase tracking-[0.15em]">
-                {{ $page.props.activeElection ? 'PEMILIHAN AKTIF' : 'PEMILIHAN TIDAK AKTIF' }}
+                {{ activeElection ? 'ELECTION ACTIVE' : 'NO ACTIVE ELECTION' }}
               </span>
             </div>
-            <div class="font-heading text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">KOSGORO&#8482;</div>
+            <div class="font-heading text-[10px] font-bold text-gray-500 uppercase tracking-[0.15em]">VUWOTING&#8482;</div>
           </div>
         </div>
 
@@ -154,8 +159,8 @@
           <button @click="sidebarOpen = true" class="w-10 h-10 border-2 border-white flex items-center justify-center hover:bg-white hover:text-neo-black transition-colors">
             <span class="material-symbols-outlined">menu</span>
           </button>
-          <div class="font-heading font-black text-base tracking-tight">KOSGORO<span class="text-neo-yellow">&#8482;</span></div>
-          <button @click="toggleDark()" class="w-10 h-10 border-2 border-white/40 hover:border-white flex items-center justify-center hover:bg-white/10 transition-colors">
+          <div class="font-heading font-black text-base tracking-tight">VUWOTING<span class="text-neo-yellow">&#8482;</span></div>
+          <button @click="toggle()" class="w-10 h-10 border-2 border-white/40 hover:border-white flex items-center justify-center hover:bg-white/10 transition-colors">
             <span class="material-symbols-outlined text-base">{{ isDark ? 'light_mode' : 'dark_mode' }}</span>
           </button>
         </div>
@@ -165,10 +170,10 @@
       <div class="neo-ticker-bar block">
         <div class="neo-ticker-content">
           <template v-for="n in 3" :key="n">
-            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>KOSGORO&#8482; VOTING SYSTEM</span>
-            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>PERIODE PEMILIHAN AKTIF</span>
-            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>SUARAMU MENENTUKAN PEMIMPIN</span>
-            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>TRANSPARANSI ABSOLUT</span>
+            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>VUWOTING&#8482; EVENT VOTING PLATFORM</span>
+            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>{{ activeElection ? 'ELECTION ACTIVE' : 'NO ACTIVE ELECTION' }}</span>
+            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>YOUR VOTE. YOUR VOICE.</span>
+            <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>ABSOLUTE TRANSPARENCY</span>
           </template>
         </div>
       </div>
@@ -184,12 +189,11 @@
 
       <!-- Footer -->
       <footer class="border-t-neo border-neo-black dark:border-white bg-white dark:bg-neo-dark-card px-4 md:px-8 py-3 flex items-center justify-between mt-auto">
-        <span class="font-heading text-[10px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-[0.15em]">© 2026 KOSGORO&#8482;</span>
+        <span class="font-heading text-[10px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-[0.15em]">© 2026 VUWOTING&#8482;</span>
         <span class="font-heading text-[10px] font-bold text-gray-300 dark:text-gray-600 uppercase tracking-[0.15em]">POWERED BY NEOBRUTALISM</span>
       </footer>
     </div>
 
-    <!-- Toasts Layer -->
     <NeoToast />
   </div>
 </template>
@@ -207,25 +211,27 @@ const sidebarOpen = ref(false);
 const sidebarCollapsed = ref(false);
 try {
   sidebarCollapsed.value = localStorage.getItem('sidebar-collapsed') === '1';
-} catch (e) {
-  // Ignore
-}
-const { isDark, toggle: toggleDark } = useDarkMode();
+} catch (e) {}
+
+const { isDark, toggle } = useDarkMode();
 
 const toggleSidebar = () => {
   sidebarCollapsed.value = !sidebarCollapsed.value;
-  try {
-    localStorage.setItem('sidebar-collapsed', sidebarCollapsed.value ? '1' : '0');
-  } catch (e) {
-    // Ignore
-  }
+  try { localStorage.setItem('sidebar-collapsed', sidebarCollapsed.value ? '1' : '0'); } catch (e) {}
 };
 
-router.on('navigate', () => { 
-  sidebarOpen.value = false; 
-});
+router.on('navigate', () => { sidebarOpen.value = false; });
 
-const page = usePage();
-const user = computed(() => page.props.auth?.user);
-const isAdmin = computed(() => ['admin', 'super_admin'].includes(user.value?.role));
+const page         = usePage();
+const user         = computed(() => page.props.auth?.user);
+const currentEvent = computed(() => page.props.currentEvent);
+const activeElection = computed(() => page.props.activeElection);
+const isAdmin      = computed(() => ['admin', 'super_admin'].includes(user.value?.role));
+
+const themeClass = computed(() => {
+  if (currentEvent.value && currentEvent.value.theme) {
+    return `theme-${currentEvent.value.theme}`;
+  }
+  return 'theme-neo-brutalism';
+});
 </script>

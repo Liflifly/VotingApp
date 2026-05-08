@@ -1,29 +1,29 @@
 <template>
-  <AuthenticatedLayout title="KELOLA PERIODE">
+  <AuthenticatedLayout title="MANAGE ELECTIONS">
     <!-- Header -->
-    <div class="neo-page-header bg-white shadow-neo mb-6 md:mb-8">
+    <div class="neo-page-header bg-white dark:bg-neo-dark-card shadow-neo dark:shadow-neo-white mb-6 md:mb-8">
       <div class="absolute top-0 right-0 w-16 h-16 bg-neo-blue/10 border-l-2 border-b-2 border-neo-blue/20"></div>
       <div class="absolute bottom-0 left-0 w-10 h-10 bg-neo-yellow/10 border-r-2 border-t-2 border-neo-yellow/20"></div>
       
       <div class="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 class="font-heading font-black text-lg md:text-h1 uppercase flex items-center gap-2 md:gap-3">
+          <h1 class="font-heading font-black text-lg md:text-h1 uppercase flex items-center gap-2 md:gap-3 dark:text-white">
             <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">event</span>
-            KELOLA PERIODE
+            MANAGE ELECTIONS
           </h1>
-          <p class="font-body text-xs md:text-sm text-neo-grey mt-1">Manajemen siklus pemilihan Kosgoro</p>
+          <p class="font-body text-xs md:text-sm text-neo-grey mt-1">Manage election cycles for this event</p>
         </div>
-        <Link :href="route('admin.elections.create')" class="neo-btn-sm-primary">
+        <Link :href="route('events.admin.elections.create', event.slug)" class="neo-btn-sm-primary">
           <span class="material-symbols-outlined text-sm font-bold">add</span>
-          BUAT PERIODE BARU
+          NEW ELECTION
         </Link>
       </div>
     </div>
 
     <div v-if="elections.length === 0" class="neo-card p-8 md:p-12 text-center relative overflow-hidden">
       <div class="absolute top-0 right-0 w-12 h-12 bg-neo-yellow/20 border-l-2 border-b-2 border-neo-yellow/30"></div>
-      <h3 class="font-heading font-black text-h2 uppercase mb-2">BELUM ADA PERIODE</h3>
-      <p class="font-body text-sm md:text-body-md text-neo-grey">Buat periode pemilihan pertama untuk memulai.</p>
+      <h3 class="font-heading font-black text-h2 uppercase mb-2 dark:text-white">NO ELECTIONS YET</h3>
+      <p class="font-body text-sm md:text-body-md text-neo-grey">Create the first election period to get started.</p>
     </div>
 
     <div v-else class="space-y-3 md:space-y-4">
@@ -33,33 +33,33 @@
         <div class="flex flex-col md:flex-row md:items-start justify-between gap-3 md:gap-4">
           <div class="flex-1 min-w-0">
             <div class="flex flex-wrap items-start md:items-center gap-2 md:gap-3 mb-1 md:mb-2">
-              <h3 class="font-heading font-black text-base md:text-lg uppercase break-words whitespace-normal leading-tight flex-1 min-w-0">{{ election.name }}</h3>
-              <span :class="statusBadgeClass(getEffectiveStatus(election))" class="shrink-0 mt-0.5 md:mt-0">{{ getEffectiveStatus(election) === 'expired' ? 'KADALUARSA' : election.status?.toUpperCase() }}</span>
+              <h3 class="font-heading font-black text-base md:text-lg uppercase break-words whitespace-normal leading-tight flex-1 min-w-0 dark:text-white">{{ election.name }}</h3>
+              <span :class="statusBadgeClass(getEffectiveStatus(election))" class="shrink-0 mt-0.5 md:mt-0">{{ getEffectiveStatus(election)?.toUpperCase() }}</span>
             </div>
             <div class="flex flex-wrap gap-3 md:gap-4 font-body text-[10px] md:text-xs text-neo-grey">
-              <span><strong class="text-neo-black">Mulai:</strong> {{ formatDate(election.starts_at) }}</span>
-              <span><strong class="text-neo-black">Selesai:</strong> {{ formatDate(election.ends_at) }}</span>
+              <span><strong class="text-neo-black dark:text-white">Start:</strong> {{ formatDate(election.starts_at) }}</span>
+              <span><strong class="text-neo-black dark:text-white">End:</strong> {{ formatDate(election.ends_at) }}</span>
             </div>
             
             <!-- Notes Preview -->
-            <div v-if="election.notes" class="mt-2.5 p-2 bg-gray-50 dark:bg-neo-dark-surface border-l-4 border-neo-yellow font-body text-[10px] md:text-[11px] text-neo-black dark:text-white max-h-[85px] overflow-y-auto max-w-2xl whitespace-pre-line scrollbar-thin scrollbar-thumb-neo-black scrollbar-track-transparent">
-              <strong class="font-heading text-[9px] uppercase text-neo-grey dark:text-gray-400 block mb-0.5">Catatan:</strong>
+            <div v-if="election.notes" class="mt-2.5 p-2 bg-gray-50 dark:bg-neo-dark-surface border-l-4 border-neo-yellow font-body text-[10px] md:text-[11px] text-neo-black dark:text-white max-h-[85px] overflow-y-auto max-w-2xl whitespace-pre-line scrollbar-thin">
+              <strong class="font-heading text-[9px] uppercase text-neo-grey dark:text-gray-400 block mb-0.5">Notes:</strong>
               {{ election.notes }}
             </div>
           </div>
           <div class="flex flex-wrap gap-1.5 md:gap-2 md:shrink-0">
-            <Link :href="route('admin.elections.show', election.id)" class="neo-btn-sm-secondary">DETAIL</Link>
-            <Link v-if="election.status === 'draft' || election.status === 'active'" :href="route('admin.elections.edit', election.id)" class="neo-btn-sm-secondary">EDIT</Link>
-            <Link :href="route('admin.candidates.index', election.id)" class="neo-btn-sm-secondary">KANDIDAT</Link>
+            <Link :href="route('events.admin.elections.show', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary">DETAIL</Link>
+            <Link v-if="election.status === 'draft' || election.status === 'active'" :href="route('events.admin.elections.edit', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary">EDIT</Link>
+            <Link :href="route('events.admin.candidates.index', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary">CANDIDATES</Link>
             <button 
               v-if="election.status === 'draft'" 
               @click="handleActivateClick(election)" 
               class="neo-btn-sm-primary"
             >
-              AKTIFKAN
+              ACTIVATE
             </button>
-            <button v-if="election.status === 'draft'" @click="promptAction(route('admin.elections.destroy', election.id), 'Hapus Draft?', 'Periode ini beserta seluruh kandidat di dalamnya akan dihapus permanen.', 'Ya, Hapus!', 'bg-neo-red', 'delete')" class="neo-btn-sm-danger">HAPUS</button>
-            <button v-if="election.status === 'active'" @click="promptAction(route('admin.elections.end', election.id), 'Akhiri Periode?', 'Tindakan ini tidak dapat dibatalkan.', 'Ya, Akhiri!', 'bg-neo-red')" class="neo-btn-sm-danger">AKHIRI</button>
+            <button v-if="election.status === 'draft'" @click="promptAction(route('events.admin.elections.destroy', { event: event.slug, election: election.id }), 'Delete Draft?', 'This election and all its candidates will be permanently deleted.', 'YES, DELETE!', 'bg-neo-red', 'delete')" class="neo-btn-sm-danger">DELETE</button>
+            <button v-if="election.status === 'active'" @click="promptAction(route('events.admin.elections.end', { event: event.slug, election: election.id }), 'End Election?', 'This action cannot be undone.', 'YES, END!', 'bg-neo-red')" class="neo-btn-sm-danger">END</button>
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@
 
               <!-- Label chip -->
               <div class="inline-block mb-3 px-3 py-0.5 bg-neo-black dark:bg-white text-white dark:text-neo-black font-heading font-black text-[10px] uppercase tracking-[0.25em]">
-                {{ actionConfig.infoOnly ? 'PERINGATAN SISTEM' : 'KONFIRMASI TINDAKAN' }}
+                {{ actionConfig.infoOnly ? 'SYSTEM WARNING' : 'CONFIRM ACTION' }}
               </div>
 
               <!-- Title -->
@@ -127,7 +127,7 @@
                     @click="showActionAlert = false"
                     class="flex-1 py-3 px-2 bg-neo-yellow text-neo-black border-[3px] border-neo-black font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
                   >
-                    OK, MENGERTI
+                    OK, GOT IT
                   </button>
                 </template>
                 <template v-else>
@@ -135,7 +135,7 @@
                     @click="showActionAlert = false"
                     class="flex-1 py-3 px-2 bg-white dark:bg-neo-dark-surface text-neo-black dark:text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
                   >
-                    BATAL
+                    CANCEL
                   </button>
                   <button
                     @click="confirmActionExecute"
@@ -150,7 +150,7 @@
             <!-- Bottom branding bar -->
             <div class="px-5 py-2 bg-gray-50 dark:bg-neo-dark-surface border-t-[3px] border-neo-black dark:border-white flex items-center justify-center gap-2">
               <span class="material-symbols-outlined text-neo-grey dark:text-gray-500 text-sm">event</span>
-              <span class="font-heading font-black text-[10px] uppercase tracking-[0.2em] text-neo-grey dark:text-gray-500">KOSGORO™ SYSTEM</span>
+              <span class="font-heading font-black text-[10px] uppercase tracking-[0.2em] text-neo-grey dark:text-gray-500">VUWOTING&#8482; SYSTEM</span>
             </div>
           </div>
 
@@ -165,7 +165,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { ref } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 
-defineProps({ elections: Array });
+defineProps({ elections: Array, event: Object });
 
 const getEffectiveStatus = (election) => {
   if (election.status === 'active' && new Date(election.ends_at) < new Date()) {
@@ -196,8 +196,8 @@ const handleActivateClick = (election) => {
   if (startsAt > now) {
     promptAction(
       '', 
-      'Belum Waktunya Mulai!', 
-      `Periode pemilihan ini baru dijadwalkan mulai pada ${formatDate(election.starts_at)}. Harap tunggu hingga waktu tersebut tiba untuk mengaktifkannya.`, 
+      'Not Time Yet!', 
+      `This election is scheduled to start on ${formatDate(election.starts_at)}. Please wait until that time to activate it.`, 
       '', 
       'bg-neo-yellow', 
       'post', 
@@ -205,10 +205,10 @@ const handleActivateClick = (election) => {
     );
   } else {
     promptAction(
-      route('admin.elections.activate', election.id), 
-      'Aktifkan Periode?', 
-      'Periode ini akan menjadi satu-satunya yang aktif dan pemilih dapat mulai memberikan suara.', 
-      'Ya, Aktifkan!', 
+      route('events.admin.elections.activate', { event: props?.event?.slug, election: election.id }), 
+      'Activate Election?', 
+      'This election will become the only active one and voters can start casting their ballots.', 
+      'YES, ACTIVATE!', 
       'bg-neo-blue',
       'post',
       false
@@ -234,6 +234,6 @@ const statusBadgeClass = (status) => {
 
 const formatDate = (date) => {
   if (!date) return '-';
-  return new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 </script>

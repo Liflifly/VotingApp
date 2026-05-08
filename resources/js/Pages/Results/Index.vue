@@ -4,8 +4,8 @@
     <div v-if="!election" class="max-w-2xl mx-auto mt-8 md:mt-12">
       <div class="neo-card p-8 md:p-12 text-center relative overflow-hidden">
         <div class="absolute top-0 right-0 w-12 h-12 bg-neo-yellow/20 border-l-2 border-b-2 border-neo-yellow/30"></div>
-        <h2 class="font-heading font-black text-h2 uppercase mb-2">DATA KOSONG</h2>
-        <p class="font-body text-sm md:text-body-md text-neo-grey">Belum ada hasil pemilihan yang tersedia.</p>
+        <h2 class="font-heading font-black text-h2 uppercase mb-2">NO DATA YET</h2>
+        <p class="font-body text-sm md:text-body-md text-neo-grey">No election results are available at this time.</p>
       </div>
     </div>
 
@@ -31,7 +31,7 @@
           <div class="flex items-start gap-3 flex-1">
             <span class="material-symbols-outlined text-neo-yellow text-2xl font-bold bg-neo-black p-1.5 shrink-0 shadow-[2px_2px_0px_#000]">event_note</span>
             <div>
-              <h4 class="font-heading font-black text-xs md:text-sm uppercase tracking-wider text-neo-black mb-1">CATATAN PERIODE</h4>
+              <h4 class="font-heading font-black text-xs md:text-sm uppercase tracking-wider text-neo-black mb-1">ELECTION NOTES</h4>
               <p class="font-body text-xs md:text-sm text-neo-black leading-relaxed whitespace-pre-line uppercase font-bold">{{ election.notes }}</p>
             </div>
           </div>
@@ -41,7 +41,7 @@
             @click="scrollToCandidates" 
             class="neo-btn-sm-secondary shrink-0 self-stretch sm:self-auto"
           >
-            LIHAT KANDIDAT
+            SEE RANKINGS
             <span class="material-symbols-outlined text-base animate-bounce">arrow_downward</span>
           </button>
         </div>

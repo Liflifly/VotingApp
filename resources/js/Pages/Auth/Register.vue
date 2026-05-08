@@ -1,58 +1,31 @@
 <template>
-  <GuestLayout title="DAFTAR AKUN" subtitle="Buat akun baru untuk mengakses sistem pemilihan.">
+  <GuestLayout title="CREATE ACCOUNT" subtitle="Register to create or join a voting event.">
     <form @submit.prevent="submit" class="space-y-4">
-      <!-- Name -->
       <div>
-        <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">NAMA LENGKAP</label>
-        <input v-model="form.name" type="text" class="neo-input" placeholder="Nama lengkapmu" required autofocus />
+        <label class="block font-heading text-label-caps uppercase text-neo-black dark:text-white mb-2">FULL NAME</label>
+        <input v-model="form.name" type="text" class="neo-input" placeholder="Your full name" required autofocus />
         <div v-if="form.errors.name" class="font-body text-xs text-neo-red mt-1.5 font-semibold">{{ form.errors.name }}</div>
       </div>
-
-      <!-- Email -->
       <div>
-        <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">EMAIL</label>
-        <input v-model="form.email" type="email" class="neo-input" placeholder="nama@kosgoro.id" required />
+        <label class="block font-heading text-label-caps uppercase text-neo-black dark:text-white mb-2">EMAIL</label>
+        <input v-model="form.email" type="email" class="neo-input" placeholder="you@example.com" required />
         <div v-if="form.errors.email" class="font-body text-xs text-neo-red mt-1.5 font-semibold">{{ form.errors.email }}</div>
       </div>
-
-      <!-- NIS -->
       <div>
-        <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">NIS</label>
-        <input v-model="form.nis" type="text" class="neo-input" placeholder="Nomor Induk Siswa" />
-        <div v-if="form.errors.nis" class="font-body text-xs text-neo-red mt-1.5 font-semibold">{{ form.errors.nis }}</div>
-      </div>
-
-      <!-- Kelas -->
-      <div>
-        <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">KELAS</label>
-        <input v-model="form.kelas" type="text" class="neo-input" placeholder="Contoh: XII RPL 1" />
-        <div v-if="form.errors.kelas" class="font-body text-xs text-neo-red mt-1.5 font-semibold">{{ form.errors.kelas }}</div>
-      </div>
-
-      <!-- Password -->
-      <div>
-        <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">PASSWORD</label>
-        <input v-model="form.password" type="password" class="neo-input" placeholder="Min. 8 karakter" required />
+        <label class="block font-heading text-label-caps uppercase text-neo-black dark:text-white mb-2">PASSWORD</label>
+        <input v-model="form.password" type="password" class="neo-input" placeholder="Min. 8 characters" required />
         <div v-if="form.errors.password" class="font-body text-xs text-neo-red mt-1.5 font-semibold">{{ form.errors.password }}</div>
       </div>
-
-      <!-- Confirm Password -->
       <div>
-        <label class="block font-heading text-label-caps uppercase text-neo-black mb-2">KONFIRMASI PASSWORD</label>
-        <input v-model="form.password_confirmation" type="password" class="neo-input" placeholder="Ulangi password" required />
+        <label class="block font-heading text-label-caps uppercase text-neo-black dark:text-white mb-2">CONFIRM PASSWORD</label>
+        <input v-model="form.password_confirmation" type="password" class="neo-input" placeholder="Repeat password" required />
       </div>
-
-      <!-- Submit -->
       <button type="submit" :disabled="form.processing" class="neo-btn-primary w-full py-4 text-base mt-2" :class="{ 'opacity-50 cursor-not-allowed': form.processing }">
-        DAFTAR & MASUK SISTEM →
+        REGISTER & CREATE EVENT →
       </button>
-
-      <!-- Login Link -->
       <div class="text-center pt-2">
-        <span class="font-body text-sm text-neo-grey">Sudah punya akun? </span>
-        <Link :href="route('login')" class="font-heading text-sm font-bold text-neo-blue uppercase hover:text-neo-red transition-colors">
-          MASUK →
-        </Link>
+        <span class="font-body text-sm text-neo-grey">Already have an account? </span>
+        <Link :href="route('login')" class="font-heading text-sm font-bold text-neo-blue uppercase hover:text-neo-red transition-colors">SIGN IN →</Link>
       </div>
     </form>
   </GuestLayout>
@@ -62,18 +35,6 @@
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import { useForm, Link } from '@inertiajs/vue3';
 
-const form = useForm({
-  name: '',
-  email: '',
-  nis: '',
-  kelas: '',
-  password: '',
-  password_confirmation: '',
-});
-
-const submit = () => {
-  form.post(route('register'), {
-    onFinish: () => form.reset('password', 'password_confirmation'),
-  });
-};
+const form = useForm({ name: '', email: '', password: '', password_confirmation: '' });
+const submit = () => form.post(route('register'), { onFinish: () => form.reset('password', 'password_confirmation') });
 </script>

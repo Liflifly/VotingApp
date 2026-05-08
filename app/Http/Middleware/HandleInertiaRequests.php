@@ -16,29 +16,35 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
+        $user     = $request->user();
+        $event    = $request->get('_current_event');
+        $eventRole = $request->get('_event_role');
+
         return [
             ...parent::share($request),
+
             'auth' => [
-                'user' => $request->user() ? [
-                    'id' => $request->user()->id,
-                    'name' => $request->user()->name,
-                    'email' => $request->user()->email,
-                    'nis' => $request->user()->nis,
-                    'avatar' => $request->user()->avatar
-                        ? '/storage/' . $request->user()->avatar
-                        : null,
-                    'avatar_original' => $request->user()->avatar_original
-                        ? '/storage/' . $request->user()->avatar_original
-                        : null,
-                    'role' => $request->user()->role,
-                    'has_voted' => $request->user()->has_voted ?? false,
+                'user' => $user ? [
+                    'id'              => $user->id,
+                    'name'            => $user->name,
+                    'email'           => $user->email,
+                    'avatar'          => $user->avatar ? '/storage/' . $user->avatar : null,
+                    'avatar_original' => $user->avatar_original ? '/storage/' . $user->avatar_original : null,
+                    'role'            => $eventRole,  // Role is event-scoped
                 ] : null,
             ],
-            'activeElection' => \App\Models\Election::active()->first(),
+
+            'currentEvent' => $event ? [
+                'id'    => $event->id,
+                'name'  => $event->name,
+                'slug'  => $event->slug,
+                'theme' => $event->theme,
+            ] : null,
+
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
-                'status' => fn () => $request->session()->get('status'),
+                'error'   => fn () => $request->session()->get('error'),
+                'status'  => fn () => $request->session()->get('status'),
             ],
         ];
     }

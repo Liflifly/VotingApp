@@ -3,15 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Candidate;
+use App\Models\Event;
+use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class CandidateController extends Controller
 {
-    public function show(Candidate $candidate)
+    public function show(Event $event, Candidate $candidate)
     {
-        $activeElection = \App\Models\Election::active()->first();
-        $totalCandidates = $activeElection ? \App\Models\Candidate::where('election_id', $activeElection->id)->count() : 0;
-        $user = auth()->user();
+        $activeElection  = $event->activeElection();
+        $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
+        $totalCandidates = $activeElection
+            ? Candidate::where('election_id', $activeElection->id)->count()
+            : 0;
 
-        return \Inertia\Inertia::render('Vote/Show', compact('candidate', 'activeElection', 'totalCandidates', 'user'));
+        return Inertia::render('Vote/Show', compact(
+            'event',
+            'candidate',
+            'activeElection',
+            'totalCandidates',
+            'candidateFields',
+        ));
     }
 }

@@ -2,44 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class AdminUserController extends Controller
 {
-    public function index()
+    public function index(Event $event)
     {
-        $users = User::orderBy('name')->get();
+        $members = $event->users()
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($user) => [
+                'id'     => $user->id,
+                'name'   => $user->name,
+                'email'  => $user->email,
+                'avatar' => $user->avatar ? '/storage/' . $user->avatar : null,
+                'role'   => $user->pivot->role,
+            ]);
 
-        return \Inertia\Inertia::render('Admin/Users/Index', compact('users'));
+        return Inertia::render('Admin/Users/Index', compact('event', 'members'));
     }
 
     /**
-     * SEC-02 FIX:
-     * 1. Cegah self-modification (admin mengubah role dirinya sendiri).
-     * 2. Cegah Super Admin di-downgrade melalui endpoint ini.
-     * 3. Pastikan 'super_admin' tidak bisa di-set melalui endpoint ini.
+     * Update a member's role within this event.
+     * Super admins cannot be demoted through this endpoint.
      */
-    public function updateRole(Request $request, User $user)
+    public function updateRole(Request $request, Event $event, User $user)
     {
-        // Cegah modifikasi diri sendiri
+        // Prevent self-modification
         if ($request->user()->id === $user->id) {
-            return back()->with('error', 'Tidak diperbolehkan mengubah role akun sendiri.');
+            return back()->with('error', 'You cannot change your own role.');
         }
 
-        // Cegah downgrade akun Super Admin
-        if ($user->role === 'super_admin') {
-            return back()->with('error', 'Akun Super Admin tidak bisa diubah dari sini. Hubungi developer.');
+        $currentRole = $event->getUserRole($user);
+
+        // Prevent downgrading super_admin
+        if ($currentRole === 'super_admin') {
+            return back()->with('error', 'Super Admin role cannot be changed here.');
         }
 
         $data = $request->validate([
-            'role' => ['required', 'in:user,admin'],
+            'role' => ['required', 'in:voter,admin'],
         ]);
 
-        // SEC-01 FIX: Gunakan explicit assignment, bukan mass assign via fillable
-        $user->role = $data['role'];
-        $user->save();
+        $event->users()->updateExistingPivot($user->id, ['role' => $data['role']]);
 
-        return redirect()->route('admin.users.index')->with('success', 'Boom! Pangkat admin berhasil diubah sesuai perintah.');
+        return redirect()->route('events.admin.users.index', $event)
+            ->with('success', 'Member role updated.');
+    }
+
+    /**
+     * Remove a member from the event.
+     */
+    public function destroy(Request $request, Event $event, User $user)
+    {
+        if ($request->user()->id === $user->id) {
+            return back()->with('error', 'You cannot remove yourself from an event.');
+        }
+
+        if ($event->getUserRole($user) === 'super_admin') {
+            return back()->with('error', 'The Super Admin cannot be removed.');
+        }
+
+        $event->users()->detach($user->id);
+
+        return redirect()->route('events.admin.users.index', $event)
+            ->with('success', 'Member removed from event.');
     }
 }

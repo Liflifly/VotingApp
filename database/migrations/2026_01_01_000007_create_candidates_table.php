@@ -6,25 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('candidates', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('class');
-            $table->string('photo')->nullable();
-            $table->text('vision');
-            $table->text('mission');
+            $table->foreignId('election_id')->constrained()->onDelete('cascade');
+            $table->integer('order_number')->default(1);
+            $table->json('fields')->nullable(); // Dynamic field values defined by event admin
             $table->timestamps();
+
+            $table->index('election_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('candidates');

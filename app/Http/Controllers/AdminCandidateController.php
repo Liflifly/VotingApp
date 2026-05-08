@@ -4,118 +4,152 @@ namespace App\Http\Controllers;
 
 use App\Models\Candidate;
 use App\Models\Election;
+use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class AdminCandidateController extends Controller
 {
-    public function index(Election $election)
+    public function index(Event $event, Election $election)
     {
-        $candidates = $election->candidates()->orderBy('order_number')->get();
+        $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
+        $candidates      = $election->candidates()
+            ->orderBy('order_number')
+            ->get()
+            ->map(fn ($c) => [
+                'id'           => $c->id,
+                'order_number' => $c->order_number,
+                'fields'       => $c->fields,
+                'photo_url'    => $c->photo_url,
+            ]);
 
-        return \Inertia\Inertia::render('Admin/Candidates/Index', compact('election', 'candidates'));
+        return Inertia::render('Admin/Candidates/Index', compact('event', 'election', 'candidates', 'candidateFields'));
     }
 
-    public function create(Election $election)
+    public function create(Event $event, Election $election)
     {
-        return \Inertia\Inertia::render('Admin/Candidates/Create', compact('election'));
+        $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
+
+        return Inertia::render('Admin/Candidates/Create', compact('event', 'election', 'candidateFields'));
     }
 
-    public function store(Request $request, Election $election)
+    public function store(Request $request, Event $event, Election $election)
     {
         if ($election->status === 'active') {
-            abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
+            abort(403, 'Cannot modify candidates during an active election.');
         }
 
-        // SEC-03 FIX: Gunakan return value dari validate() sebagai sumber data
-        // SEC-04 FIX: Hapus 'gif', tambahkan validasi dimensions minimum
-        $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'order_number' => 'nullable|integer|min:1',
-            'class'        => 'required|string|max:255',
-            'vision'       => 'required|string',
-            'mission'      => 'required|string',
-            'program'      => 'nullable|string',
-            'photo'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048|dimensions:min_width=100,min_height=100',
+        $request->validate([
+            'order_number' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $photoPath = null;
-        if ($request->hasFile('photo')) {
-            $photoPath = $request->file('photo')->store('candidates', 'public');
-        }
+        $fieldDefs    = $event->candidateFieldDefinitions()->get();
+        $fieldsData   = [];
+        $dynamicRules = [];
 
-        $nextOrder = $election->candidates()->max('order_number');
-        $nextOrder = $nextOrder ? $nextOrder + 1 : 1;
-
-        // SEC-03 FIX: Data diambil dari $validated, bukan langsung dari $request->property
-        $election->candidates()->create([
-            'name'         => $validated['name'],
-            'order_number' => $validated['order_number'] ?? $nextOrder,
-            'class'        => $validated['class'],
-            'vision'       => $validated['vision'],
-            'mission'      => $validated['mission'],
-            'program'      => $validated['program'] ?? null,
-            'photo'        => $photoPath,
-        ]);
-
-        return redirect()->route('admin.candidates.index', $election)->with('success', 'Kandidat berhasil bergabung dalam pesta demokrasi!');
-    }
-
-    public function edit(Election $election, Candidate $candidate)
-    {
-        return \Inertia\Inertia::render('Admin/Candidates/Edit', compact('election', 'candidate'));
-    }
-
-    public function update(Request $request, Election $election, Candidate $candidate)
-    {
-        if ($election->status === 'active') {
-            abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
-        }
-
-        // SEC-03 FIX: Gunakan return value dari validate()
-        // SEC-04 FIX: Hapus 'gif', tambahkan validasi dimensions minimum
-        $validated = $request->validate([
-            'name'         => 'required|string|max:255',
-            'order_number' => 'nullable|integer|min:1',
-            'class'        => 'required|string|max:255',
-            'vision'       => 'required|string',
-            'mission'      => 'required|string',
-            'program'      => 'nullable|string',
-            'photo'        => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048|dimensions:min_width=100,min_height=100',
-        ]);
-
-        $data = [
-            'name'         => $validated['name'],
-            'order_number' => $validated['order_number'] ?: $candidate->order_number,
-            'class'        => $validated['class'],
-            'vision'       => $validated['vision'],
-            'mission'      => $validated['mission'],
-            'program'      => $validated['program'] ?? null,
-        ];
-
-        if ($request->hasFile('photo')) {
-            if ($candidate->photo) {
-                Storage::disk('public')->delete($candidate->photo);
+        foreach ($fieldDefs as $field) {
+            $rules = $field->required ? ['required'] : ['nullable'];
+            if ($field->type === 'image') {
+                $dynamicRules["fields.{$field->key}"] = [...$rules, 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'];
+            } else {
+                $dynamicRules["fields.{$field->key}"] = [...$rules, 'string', 'max:2000'];
             }
-            $data['photo'] = $request->file('photo')->store('candidates', 'public');
         }
 
-        $candidate->update($data);
+        $request->validate($dynamicRules);
 
-        return redirect()->route('admin.candidates.index', $election)->with('success', 'Mantap! Profil kandidat sudah di-update menjadi lebih keren.');
+        foreach ($fieldDefs as $field) {
+            if ($field->type === 'image' && $request->hasFile("fields.{$field->key}")) {
+                $fieldsData[$field->key] = $request->file("fields.{$field->key}")
+                    ->store('candidates', 'public');
+            } else {
+                $fieldsData[$field->key] = $request->input("fields.{$field->key}");
+            }
+        }
+
+        $nextOrder = $election->candidates()->max('order_number') + 1;
+
+        $election->candidates()->create([
+            'order_number' => $request->input('order_number') ?? $nextOrder,
+            'fields'       => $fieldsData,
+        ]);
+
+        return redirect()->route('events.admin.candidates.index', [$event, $election])
+            ->with('success', 'Candidate added successfully.');
     }
 
-    public function destroy(Election $election, Candidate $candidate)
+    public function edit(Event $event, Election $election, Candidate $candidate)
+    {
+        $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
+
+        return Inertia::render('Admin/Candidates/Edit', compact('event', 'election', 'candidate', 'candidateFields'));
+    }
+
+    public function update(Request $request, Event $event, Election $election, Candidate $candidate)
     {
         if ($election->status === 'active') {
-            abort(403, 'Waduh, periode pemilihan lagi aktif nih, gak boleh diotak-atik!');
+            abort(403, 'Cannot modify candidates during an active election.');
         }
-        if ($candidate->photo) {
-            Storage::disk('public')->delete($candidate->photo);
+
+        $request->validate([
+            'order_number' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $fieldDefs    = $event->candidateFieldDefinitions()->get();
+        $fieldsData   = $candidate->fields ?? [];
+        $dynamicRules = [];
+
+        foreach ($fieldDefs as $field) {
+            $rules = $field->required ? ['required'] : ['nullable'];
+            if ($field->type === 'image') {
+                $dynamicRules["fields.{$field->key}"] = [...$rules, 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'];
+            } else {
+                $dynamicRules["fields.{$field->key}"] = [...$rules, 'string', 'max:2000'];
+            }
+        }
+
+        $request->validate($dynamicRules);
+
+        foreach ($fieldDefs as $field) {
+            if ($field->type === 'image' && $request->hasFile("fields.{$field->key}")) {
+                // Delete old image
+                if (isset($fieldsData[$field->key])) {
+                    Storage::disk('public')->delete($fieldsData[$field->key]);
+                }
+                $fieldsData[$field->key] = $request->file("fields.{$field->key}")
+                    ->store('candidates', 'public');
+            } elseif ($request->has("fields.{$field->key}")) {
+                $fieldsData[$field->key] = $request->input("fields.{$field->key}");
+            }
+        }
+
+        $candidate->update([
+            'order_number' => $request->input('order_number') ?: $candidate->order_number,
+            'fields'       => $fieldsData,
+        ]);
+
+        return redirect()->route('events.admin.candidates.index', [$event, $election])
+            ->with('success', 'Candidate updated successfully.');
+    }
+
+    public function destroy(Event $event, Election $election, Candidate $candidate)
+    {
+        if ($election->status === 'active') {
+            abort(403, 'Cannot delete candidates during an active election.');
+        }
+
+        // Delete any stored image files
+        $fields = $candidate->fields ?? [];
+        foreach ($fields as $value) {
+            if (is_string($value) && Storage::disk('public')->exists($value)) {
+                Storage::disk('public')->delete($value);
+            }
         }
 
         $candidate->delete();
 
-        return redirect()->route('admin.candidates.index', $election)->with('success', 'Kandidat telah dihapus. Selesai sudah perjalanannya di sini.');
+        return redirect()->route('events.admin.candidates.index', [$event, $election])
+            ->with('success', 'Candidate removed.');
     }
 }

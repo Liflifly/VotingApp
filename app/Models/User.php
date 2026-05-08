@@ -2,47 +2,31 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
     /**
-     * The attributes that are mass assignable.
-     * SECURITY: role, has_voted, voted_election_id are intentionally excluded
-     * to prevent mass assignment privilege escalation attacks.
-     *
-     * @var list<string>
+     * SECURITY: Only basic profile fields are mass-assignable.
+     * Roles are managed exclusively through the event_user pivot.
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'nis',
         'avatar',
         'avatar_original',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -51,9 +35,50 @@ class User extends Authenticatable
         ];
     }
 
+    // ─── Relationships ───────────────────────────────────────────────────────
+
+    public function events()
+    {
+        return $this->belongsToMany(Event::class, 'event_user')
+            ->withPivot('role', 'metadata')
+            ->withTimestamps();
+    }
+
+    public function createdEvents()
+    {
+        return $this->hasMany(Event::class, 'created_by');
+    }
+
+    public function votes()
+    {
+        return $this->hasMany(Vote::class);
+    }
+
+    // ─── Role Helpers ─────────────────────────────────────────────────────────
+
     /**
-     * BUG-02 FIX: Query langsung ke tabel votes sebagai source of truth,
-     * bukan membandingkan kolom voted_election_id yang bisa out-of-sync.
+     * Get this user's role within a specific event.
+     */
+    public function roleInEvent(Event $event): ?string
+    {
+        return $this->events()
+            ->where('event_id', $event->id)
+            ->first()?->pivot->role;
+    }
+
+    /**
+     * Check if the user has a given role (or any of the given roles) in an event.
+     */
+    public function hasRoleInEvent(Event $event, string|array $roles): bool
+    {
+        $role = $this->roleInEvent($event);
+        if ($role === null) return false;
+        return in_array($role, (array) $roles);
+    }
+
+    /**
+     * Check if the user has voted in a specific election.
+     * Queries votes table directly (source of truth).
      */
     public function hasVotedInElection(Election $election): bool
     {
@@ -63,11 +88,18 @@ class User extends Authenticatable
     }
 
     /**
-     * BUG-02 FIX: Diganti ke hasMany karena satu user bisa vote
-     * di banyak election (berbeda periode).
+     * Get this user's dynamic metadata for a specific event.
      */
-    public function votes()
+    public function metadataInEvent(Event $event): ?array
     {
-        return $this->hasMany(Vote::class);
+        $pivot = $this->events()
+            ->where('event_id', $event->id)
+            ->first()?->pivot;
+
+        if ($pivot && is_string($pivot->metadata)) {
+            return json_decode($pivot->metadata, true);
+        }
+
+        return $pivot?->metadata;
     }
 }

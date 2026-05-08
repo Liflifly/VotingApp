@@ -16,19 +16,18 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
-            'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'admin'         => \App\Http\Middleware\AdminMiddleware::class,
+            'super_admin'   => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'event.context' => \App\Http\Middleware\EventContextMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Render HTTP errors (403, 404, 500, etc.) via Inertia Error page
         $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response) {
             if (in_array($response->status(), [403, 404, 419, 500, 503]) && ! request()->expectsJson()) {
                 return Inertia::render('Error', ['status' => $response->status()])
                     ->toResponse(request())
                     ->setStatusCode($response->status());
             }
-
             return $response;
         });
     })->create();

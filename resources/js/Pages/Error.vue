@@ -16,7 +16,7 @@
           <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>ERROR {{ status }}</span>
           <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>CRITICAL SYSTEM ALERT</span>
           <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>{{ title }}</span>
-          <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>KOSGORO™ V1.0</span>
+          <span class="neo-ticker-item"><span class="neo-ticker-dot"></span>VUWOTING™ V2.0</span>
         </template>
       </div>
     </div>
@@ -64,25 +64,25 @@
 
           <!-- Action Buttons -->
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link :href="route('dashboard')" class="neo-btn-primary text-xs py-3.5 px-8 shadow-neo">
-              <span class="material-symbols-outlined text-base">grid_view</span>
-              DASHBOARD
+            <Link :href="route('home')" class="neo-btn-primary text-xs py-3.5 px-8 shadow-neo">
+              <span class="material-symbols-outlined text-base">home</span>
+              HOME
             </Link>
             <button @click="goBack" class="neo-btn-secondary text-xs py-3.5 px-8 shadow-neo">
               <span class="material-symbols-outlined text-base">arrow_back</span>
-              KEMBALI
+              BACK
             </button>
           </div>
 
           <!-- Error code small note -->
           <div class="mt-8 font-heading text-[10px] font-bold text-gray-300 uppercase tracking-[0.25em]">
-            IDENTIFIER: {{ errorIdentifier }} • KOSGORO™ OS
+            IDENTIFIER: {{ errorIdentifier }} • VUWOTING™ OS
           </div>
         </div>
 
         <!-- Brand -->
         <div class="text-center mt-6 md:mt-8">
-          <div class="font-heading font-black text-xl text-neo-black tracking-tight">KOSGORO<span class="text-neo-blue">™</span></div>
+          <div class="font-heading font-black text-xl text-neo-black tracking-tight">VUWOTING<span class="text-neo-blue">™</span></div>
           <div class="font-heading text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-0.5">ESTABLISHED 2026 • DIGITAL VOTING SYSTEM</div>
         </div>
       </div>
@@ -106,7 +106,7 @@ const title = computed(() => {
     503: 'MAINTENANCE MODE',
     500: 'SERVER MELTDOWN',
     419: 'SESSION EXPIRED',
-    403: 'AKSES DITOLAK',
+    403: 'ACCESS DENIED',
     404: 'MISSING IN ACTION',
   };
   return titles[props.status] ?? 'UNKNOWN ERROR';
@@ -114,13 +114,13 @@ const title = computed(() => {
 
 const description = computed(() => {
   const descriptions = {
-    503: 'Sistem sedang dalam pemeliharaan rutin. Silakan kembali dalam beberapa menit.',
-    500: 'Terjadi kegagalan sistem internal. Teknisi kami sedang melakukan perbaikan darurat.',
-    419: 'Sesi anda telah kedaluwarsa demi keamanan. Silakan refresh dan login kembali.',
-    403: 'Anda tidak memiliki otorisasi untuk mengakses zona ini. Silakan hubungi Commander.',
-    404: 'Halaman yang anda cari tidak ditemukan di server. Periksa kembali koordinat URL anda.',
+    503: 'System is currently under routine maintenance. Please check back in a few minutes.',
+    500: 'An internal system failure has occurred. Our engineers are performing an emergency fix.',
+    419: 'Your session has expired for security reasons. Please refresh and log in again.',
+    403: 'You do not have authorization to access this zone. Please contact the Event Admin.',
+    404: 'The page you are looking for was not found on the server. Please check your URL coordinates.',
   };
-  return descriptions[props.status] ?? 'Terjadi kesalahan sistem yang tidak terduga. Silakan hubungi tim dukungan kami.';
+  return descriptions[props.status] ?? 'An unexpected system error occurred. Please contact our support team.';
 });
 
 const statusIcon = computed(() => {

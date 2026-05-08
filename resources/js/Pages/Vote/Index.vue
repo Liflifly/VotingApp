@@ -7,8 +7,8 @@
         <div class="w-16 h-16 md:w-20 md:h-20 bg-gray-100 border-neo border-neo-black mx-auto mb-4 md:mb-6 flex items-center justify-center">
           <span class="material-symbols-outlined text-3xl md:text-4xl text-neo-grey">ballot</span>
         </div>
-        <h2 class="font-heading font-black text-h2 uppercase mb-2">PEMILIHAN BELUM DIBUKA</h2>
-        <p class="font-body text-sm md:text-body-md text-neo-grey">Silakan tunggu hingga administrator membuka periode pemilihan.</p>
+        <h2 class="font-heading font-black text-h2 uppercase mb-2">VOTING NOT OPEN</h2>
+        <p class="font-body text-sm md:text-body-md text-neo-grey">Voting has not started yet. Please wait for an administrator to open the election period.</p>
       </div>
     </div>
 
@@ -23,30 +23,30 @@
             <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">how_to_vote</span>
             <div>
               <h1 class="font-heading font-black text-lg md:text-h1 uppercase mb-1 flex items-center gap-2 md:gap-3">
-                PILIH KANDIDATMU
+                CAST YOUR VOTE
               </h1>
-              <p class="font-body text-xs md:text-sm text-neo-grey">Klik "BACA DETAIL" pada kartu kandidat, lalu berikan suara setelah membaca semuanya.</p>
+              <p class="font-body text-xs md:text-sm text-neo-grey">Click "READ DETAILS" on each candidate card, then cast your vote after reviewing all candidates.</p>
             </div>
           </div>
           <div v-if="user?.has_voted" class="neo-badge bg-gray-200 text-neo-black shrink-0">
             <span class="material-symbols-outlined text-sm">check_circle</span>
-            SUDAH MEMILIH
+            ALREADY VOTED
           </div>
           <div v-else class="neo-badge-live neo-pulse shrink-0">
             <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-            VOTING AKTIF
+            VOTING ACTIVE
           </div>
         </div>
       </div>
 
-      <!-- Catatan Periode (Jika ada) -->
+      <!-- Election Notes (If any) -->
       <div v-if="activeElection.notes" class="neo-card bg-neo-yellow/10 border-2 border-neo-black p-4 md:p-5 mb-6 md:mb-8 relative overflow-hidden">
         <div class="absolute top-0 right-0 w-8 h-8 bg-neo-yellow/20 border-l border-b border-neo-black"></div>
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10 w-full">
           <div class="flex items-start gap-3 flex-1">
             <span class="material-symbols-outlined text-neo-yellow text-2xl font-bold bg-neo-black p-1.5 shrink-0 shadow-[2px_2px_0px_#000]">event_note</span>
             <div>
-              <h4 class="font-heading font-black text-xs md:text-sm uppercase tracking-wider text-neo-black mb-1">CATATAN PERIODE</h4>
+              <h4 class="font-heading font-black text-xs md:text-sm uppercase tracking-wider text-neo-black mb-1">ELECTION NOTES</h4>
               <p class="font-body text-xs md:text-sm text-neo-black leading-relaxed whitespace-pre-line">{{ activeElection.notes }}</p>
             </div>
           </div>
@@ -56,7 +56,7 @@
             @click="scrollToVoteForm" 
             class="neo-btn bg-white hover:bg-neo-blue hover:text-white text-neo-black py-2 px-3 shadow-[2px_2px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all duration-100 shrink-0 self-stretch sm:self-auto flex items-center justify-center gap-2 text-xs font-heading font-black focus:outline-none"
           >
-            PILIH KANDIDAT
+            VOTE NOW
             <span class="material-symbols-outlined text-base animate-bounce">arrow_downward</span>
           </button>
         </div>
@@ -64,7 +64,7 @@
 
       <!-- Candidate Grid -->
       <div id="candidates-section" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 mb-6 md:mb-8">
-        <Link v-for="candidate in candidates" :key="candidate.id" :href="route('candidates.show', candidate.id)" class="block">
+        <Link v-for="candidate in candidates" :key="candidate.id" :href="route('events.candidates.show', { event: event.slug, candidate: candidate.id })" class="block">
           <div :class="[
             'neo-card overflow-hidden transition-all duration-150 h-full flex flex-col relative group',
             hasRead(candidate.id) ? 'bg-gray-50/60' : 'bg-white',
@@ -87,12 +87,12 @@
 
             <!-- Info -->
             <div class="p-3 md:p-4 flex flex-col flex-1">
-              <h3 class="font-heading font-black text-sm md:text-base uppercase mb-1 group-hover:text-neo-blue transition-colors truncate">{{ candidate.name }}</h3>
-              <p class="font-body text-[11px] md:text-xs text-neo-grey mb-4 line-clamp-2 flex-1">{{ candidate.vision }}</p>
+              <h3 class="font-heading font-black text-sm md:text-base uppercase mb-1 group-hover:text-neo-blue transition-colors truncate">{{ candidate.fields?.name || 'Candidate' }}</h3>
+              <p class="font-body text-[11px] md:text-xs text-neo-grey mb-4 line-clamp-2 flex-1">{{ candidate.fields?.vision || '' }}</p>
 
               <div class="w-full mt-auto"
                 :class="hasRead(candidate.id) ? 'neo-btn-sm-secondary' : 'neo-btn-sm-primary'">
-                {{ hasRead(candidate.id) ? 'BACA LAGI' : 'BACA DETAIL & VOTE →' }}
+                {{ hasRead(candidate.id) ? 'READ AGAIN' : 'READ DETAILS & VOTE →' }}
               </div>
             </div>
           </div>
@@ -102,12 +102,12 @@
       <!-- Action Footer -->
       <div id="vote-form-section" v-if="!user?.has_voted" class="mt-10 mb-4 pt-6 border-t-2 border-dashed border-gray-200 dark:border-gray-700 flex flex-col items-center gap-4 w-full">
         <div class="text-center flex flex-col items-center gap-3">
-          <p class="font-heading font-bold text-xs uppercase text-neo-grey">Syarat Voting: Anda harus membaca visi misi semua kandidat terlebih dahulu.</p>
+          <p class="font-heading font-bold text-xs uppercase text-neo-grey">You must read every candidate's profile before casting your vote.</p>
           
           <div class="flex flex-wrap items-center justify-center gap-4">
             <div class="flex items-center gap-2">
               <span :class="['w-3 h-3 border-2 border-neo-black', allRead ? 'bg-green-500 animate-pulse' : 'bg-neo-red']"></span>
-              <span class="font-heading text-sm font-black uppercase">{{ readCandidates.length }} / {{ candidates.length }} KANDIDAT DIBACA</span>
+              <span class="font-heading text-sm font-black uppercase">{{ readCandidates.length }} / {{ candidates.length }} CANDIDATES READ</span>
             </div>
             
             <!-- Bypass Button -->
@@ -117,7 +117,7 @@
               class="neo-btn-sm bg-neo-yellow hover:bg-neo-blue hover:text-white text-neo-black"
             >
               <span class="material-symbols-outlined text-sm font-bold">done_all</span>
-              SAYA SUDAH MEMBACA SELURUH DETAIL KANDIDAT SEBELUMNYA
+              I'VE ALREADY READ ALL CANDIDATE PROFILES
             </button>
           </div>
         </div>
@@ -125,7 +125,7 @@
         <!-- Form Pemilihan (Set to w-full to align side borders exactly with candidates grid) -->
         <form v-if="allRead" @submit.prevent="submitVote" class="w-full bg-white border-2 border-neo-black p-5 sm:p-6 shadow-neo flex flex-col gap-4">
           <div>
-            <label class="block font-heading text-xs font-black uppercase text-neo-black mb-3">PILIH KANDIDAT ANDA:</label>
+            <label class="block font-heading text-xs font-black uppercase text-neo-black mb-3">SELECT YOUR CANDIDATE:</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
               <label v-for="candidate in candidates" :key="candidate.id" 
                 :class="[
@@ -135,7 +135,7 @@
               >
                 <input type="radio" v-model="form.candidate_id" :value="candidate.id" class="sr-only">
                 <span class="font-heading font-black text-sm" :class="form.candidate_id === candidate.id ? 'text-neo-yellow' : 'text-neo-black dark:text-white'">#{{ candidate.order_number }}</span>
-                <span class="font-heading font-bold text-sm uppercase flex-1 truncate">{{ candidate.name }}</span>
+                <span class="font-heading font-bold text-sm uppercase flex-1 truncate">{{ candidate.fields?.name || 'Candidate' }}</span>
                 <span class="material-symbols-outlined text-lg" v-if="form.candidate_id === candidate.id">check_circle</span>
               </label>
             </div>
@@ -146,14 +146,14 @@
           >
             <span v-if="form.processing" class="material-symbols-outlined text-xl animate-spin">autorenew</span>
             <span v-else class="material-symbols-outlined text-xl">how_to_vote</span>
-            {{ form.processing ? 'MENGIRIM SUARA...' : 'KIRIM SUARA \u2192' }}
+            {{ form.processing ? 'SUBMITTING VOTE...' : 'SUBMIT VOTE \u2192' }}
           </button>
         </form>
         
         <!-- Locked Form Overlay Container -->
         <div v-else class="w-full bg-gray-50 border-2 border-dashed border-gray-300 p-6 text-center">
           <p class="font-heading font-bold text-xs uppercase text-neo-grey">
-            Formulir pemilihan terkunci. Silakan baca detail visi & misi semua kandidat di atas untuk membuka formulir.
+            Voting form is locked. Please read all candidate profiles above to unlock it.
           </p>
         </div>
 
@@ -161,7 +161,7 @@
         <!-- Scroll to Top Button -->
         <button @click="scrollToCandidates" class="neo-btn-sm-secondary mt-2">
           <span class="material-symbols-outlined text-sm sm:text-base">arrow_upward</span>
-          DETAIL KANDIDAT
+          CANDIDATE PROFILES
         </button>
       </div>
     </div>
@@ -194,7 +194,7 @@
 
               <!-- Label chip -->
               <div class="inline-block mb-3 px-3 py-0.5 bg-neo-black dark:bg-white text-white dark:text-neo-black font-heading font-black text-[10px] uppercase tracking-[0.25em]">
-                KONFIRMASI PILIHANMU
+                CONFIRM YOUR CHOICE
               </div>
 
               <!-- Title -->
@@ -202,12 +202,13 @@
                 {{ selectedCandidateName }}
               </h3>
 
+
               <!-- Divider -->
               <div class="mx-auto mb-4 w-12 h-[3px] bg-neo-blue" />
 
               <!-- Body text -->
               <p class="font-body text-sm text-neo-grey dark:text-gray-400 mb-7 leading-relaxed font-bold">
-                Pilihan ini tidak dapat diubah setelah Anda mengirimkannya!
+                This choice cannot be changed after submission!
               </p>
 
               <!-- CTA Buttons -->
@@ -216,13 +217,13 @@
                   @click="showConfirmModal = false"
                   class="flex-1 py-3 px-2 bg-white dark:bg-neo-dark-surface text-neo-black dark:text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
                 >
-                  BATAL
+                  CANCEL
                 </button>
                 <button
                   @click="executeVote"
                   class="flex-1 py-3 px-2 bg-neo-blue text-white border-[3px] border-neo-black dark:border-white font-heading font-black text-[10px] sm:text-xs uppercase tracking-widest shadow-[4px_4px_0px_#000] dark:shadow-[4px_4px_0px_rgba(255,255,255,0.8)] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_#000] dark:hover:shadow-[2px_2px_0px_rgba(255,255,255,0.8)] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-1"
                 >
-                  YA, KIRIM!
+                  YES, SUBMIT!
                 </button>
               </div>
             </div>
@@ -240,6 +241,7 @@ import { Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
   user: Object,
+  event: Object,
   activeElection: Object,
   candidates: Array,
 });
@@ -272,7 +274,7 @@ const allRead = computed(() => props.candidates?.every(c => hasRead(c.id)));
 
 const selectedCandidateName = computed(() => {
   const chosen = props.candidates?.find(c => c.id === form.candidate_id);
-  return chosen ? chosen.name : 'Kandidat';
+  return chosen ? (chosen.fields?.name || 'Candidate') : 'Candidate';
 });
 
 const submitVote = () => {
@@ -283,7 +285,7 @@ const submitVote = () => {
 
 const executeVote = () => {
   showConfirmModal.value = false;
-  form.post(route('vote.store'));
+  form.post(route('events.vote.store', props.event.slug));
 };
 
 const scrollToTop = () => {

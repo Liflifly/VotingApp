@@ -10,9 +10,16 @@ return new class extends Migration
     {
         Schema::create('elections', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->string('status')->default('draft'); // draft | active | ended
+            $table->integer('total_voters')->default(0);
+            $table->text('notes')->nullable();
             $table->timestamp('starts_at')->nullable();
             $table->timestamp('ends_at')->nullable();
             $table->timestamps();
+
+            $table->index(['event_id', 'status']);
         });
     }
 

@@ -10,6 +10,7 @@ class Election extends Model
     use HasFactory;
 
     protected $fillable = [
+        'event_id',
         'name',
         'status',
         'total_voters',
@@ -20,8 +21,15 @@ class Election extends Model
 
     protected $casts = [
         'starts_at' => 'datetime',
-        'ends_at' => 'datetime',
+        'ends_at'   => 'datetime',
     ];
+
+    // ─── Relationships ───────────────────────────────────────────────────────
+
+    public function event()
+    {
+        return $this->belongsTo(Event::class);
+    }
 
     public function candidates()
     {
@@ -33,17 +41,21 @@ class Election extends Model
         return $this->hasMany(Vote::class);
     }
 
-    /**
-     * BUG FIX: Sebelumnya ada spasi ekstra di ' <=' → menjadi '<='
-     * Ini menyebabkan scope active tidak pernah return data karena
-     * query jadi: WHERE starts_at ' <=' now() (syntax error / salah).
-     */
+    // ─── Scopes ──────────────────────────────────────────────────────────────
+
     public function scopeActive($query)
     {
         return $query->where('status', 'active')
             ->where('starts_at', '<=', now())
             ->where('ends_at', '>=', now());
     }
+
+    public function scopeForEvent($query, Event $event)
+    {
+        return $query->where('event_id', $event->id);
+    }
+
+    // ─── State Checks ─────────────────────────────────────────────────────────
 
     public function isActive(): bool
     {
@@ -57,22 +69,19 @@ class Election extends Model
     }
 
     /**
-     * BUG FIX: Sebelumnya pakai $this->total_voters yang hanya diset saat election
-     * di-end. Saat election masih active, nilainya 0/null sehingga selalu return 0%.
-     * Sekarang hitung langsung dari relasi votes & User::count() sebagai fallback.
+     * Calculate voter participation rate for this election.
+     * Uses the event_user pivot as the source of truth for total eligible voters.
      */
     public function participationRate(): float
     {
         $totalVoters = $this->total_voters > 0
             ? $this->total_voters
-            : \App\Models\User::where('role', 'user')->count();
+            : $this->event->users()->wherePivot('role', 'voter')->count();
 
         if ($totalVoters === 0) {
             return 0.0;
         }
 
-        $totalVotes = $this->votes()->count();
-
-        return round(($totalVotes / $totalVoters) * 100, 2);
+        return round(($this->votes()->count() / $totalVoters) * 100, 2);
     }
 }

@@ -1,36 +1,22 @@
-import { ref, watch } from 'vue';
+import { useDark, useToggle } from '@vueuse/core';
 
-const STORAGE_KEY = 'kosgoro-dark';
-const isDark = ref(false);
-
-// Function to update the DOM
-const updateDOM = (val) => {
-    if (val) {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem(STORAGE_KEY, '1');
-    } else {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem(STORAGE_KEY, '0');
-    }
-};
-
-// Initialize early
-const saved = localStorage.getItem(STORAGE_KEY);
-const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-if (saved === '1' || (saved === null && prefersDark)) {
-    isDark.value = true;
-    document.documentElement.classList.add('dark');
-}
-
-watch(isDark, (val) => {
-    updateDOM(val);
+/**
+ * @vueuse/core-powered dark mode composable.
+ * Replaces the manual localStorage + classList approach.
+ * - Persists via localStorage key 'vuwoting-dark'
+ * - Respects system prefers-color-scheme on first visit
+ * - Applies 'dark' class on <html>
+ */
+const isDark = useDark({
+    storageKey: 'vuwoting-dark',
+    valueDark: 'dark',
+    valueLight: '',
+    attribute: 'class',
+    selector: 'html',
 });
 
-export function useDarkMode() {
-    const toggle = () => {
-        isDark.value = !isDark.value;
-    };
+const toggle = useToggle(isDark);
 
+export function useDarkMode() {
     return { isDark, toggle };
 }
