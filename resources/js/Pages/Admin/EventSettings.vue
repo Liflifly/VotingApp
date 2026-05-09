@@ -79,7 +79,7 @@
             </div>
             <div>
               <div class="font-heading text-xs font-black uppercase dark:text-white">ADMIN LINK</div>
-              <div class="font-body text-[10px] text-neo-grey">Admins use this link + an invite token to join</div>
+              <div class="font-body text-[10px] text-neo-grey">Share this link to invite admins to join the event</div>
             </div>
           </div>
 
@@ -160,67 +160,22 @@
       </form>
     </div>
 
-    <!-- ─── INVITE TOKENS ─────────────────────────────────────────────────── -->
-    <div class="neo-card p-4 md:p-6 mb-6">
-      <h3 class="font-heading font-black text-base uppercase mb-1 dark:text-white">Admin Invite Tokens</h3>
-      <p class="font-body text-xs text-neo-grey mb-4 max-w-2xl">
-        Generate one-time tokens for admins. When an admin clicks the Admin Link, they will be asked for one of these tokens.
-        Each token can only be used once.
-      </p>
-
-      <form @submit.prevent="generateToken" class="flex flex-col sm:flex-row gap-3 mb-6">
-        <select v-model="tokenForm.role" class="neo-input bg-white w-full sm:w-40" required>
-          <option value="admin">Admin</option>
-          <option value="super_admin">Super Admin</option>
-        </select>
-        <select v-model="tokenForm.expires_in" class="neo-input bg-white w-full sm:w-48">
-          <option :value="24">Expires in 24 hours</option>
-          <option :value="72">Expires in 3 days</option>
-          <option :value="null">Never expires</option>
-        </select>
-        <button type="submit" :disabled="tokenForm.processing" class="neo-btn-secondary whitespace-nowrap">GENERATE TOKEN</button>
-      </form>
-
-      <div v-if="tokens.length > 0" class="overflow-x-auto">
-        <table class="w-full text-left border-collapse border-2 border-neo-black dark:border-white">
-          <thead>
-            <tr class="bg-gray-100 dark:bg-gray-800 border-b-2 border-neo-black dark:border-white">
-              <th class="p-3 font-heading text-xs font-bold uppercase tracking-wider dark:text-white">Token</th>
-              <th class="p-3 font-heading text-xs font-bold uppercase tracking-wider dark:text-white">Role</th>
-              <th class="p-3 font-heading text-xs font-bold uppercase tracking-wider dark:text-white">Expires At</th>
-              <th class="p-3 font-heading text-xs font-bold uppercase tracking-wider text-right dark:text-white">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="t in tokens" :key="t.id" class="border-b border-gray-200 dark:border-gray-700">
-              <td class="p-3 font-mono font-bold text-neo-blue text-sm">{{ t.token }}</td>
-              <td class="p-3 font-heading text-xs uppercase dark:text-white">{{ t.role.replace('_', ' ') }}</td>
-              <td class="p-3 font-body text-xs text-neo-grey">{{ t.expires_at ? new Date(t.expires_at).toLocaleString() : 'Never' }}</td>
-              <td class="p-3 text-right">
-                <button @click="revokeToken(t.id)" class="text-neo-red hover:underline text-xs font-heading font-bold uppercase">Revoke</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <div v-else class="text-center py-6 border-2 border-dashed border-gray-300 dark:border-gray-700 text-neo-grey text-sm font-heading">
-        NO ACTIVE TOKENS — Generate one above
-      </div>
-    </div>
 
     <!-- ─── DYNAMIC FIELDS ────────────────────────────────────────────────── -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <DynamicFieldBuilder
         v-model="voterFieldsLocal"
-        title="Voter Fields"
-        description="Define custom information collected when a user joins as a voter."
+        title="Data Pemilih (Voter Fields)"
+        description="Informasi yang dikumpulkan saat pengguna mendaftar sebagai pemilih."
+        icon="how_to_vote"
         :processing="voterForm.processing"
         @save="saveVoterFields"
       />
       <DynamicFieldBuilder
         v-model="candidateFieldsLocal"
-        title="Candidate Fields"
-        description="Define custom information required for candidate profiles."
+        title="Data Kandidat (Candidate Fields)"
+        description="Informasi yang diperlukan untuk profil setiap kandidat."
+        icon="person_pin"
         :processing="candidateForm.processing"
         @save="saveCandidateFields"
       />
@@ -239,7 +194,6 @@ const props = defineProps({
   event:           Object,
   voterFields:     Array,
   candidateFields: Array,
-  tokens:          Array,
   voterLink:       String,
   adminLink:       String,
 });
@@ -310,18 +264,6 @@ const settingsForm = useForm({
 });
 const updateSettings = () => settingsForm.put(route('events.admin.settings.update', props.event.slug));
 
-// ─── Tokens ───────────────────────────────────────────────────────────────────
-const tokenForm = useForm({ role: 'admin', expires_in: 24 });
-const generateToken = () => {
-  tokenForm.post(route('events.admin.tokens.generate', props.event.slug), {
-    onSuccess: () => tokenForm.reset('role', 'expires_in'),
-  });
-};
-const revokeToken = (id) => {
-  if (confirm('Revoke this invite token?')) {
-    router.delete(route('events.admin.tokens.revoke', [props.event.slug, id]));
-  }
-};
 
 // ─── Dynamic Fields ───────────────────────────────────────────────────────────
 const voterFieldsLocal     = ref(JSON.parse(JSON.stringify(props.voterFields || [])));

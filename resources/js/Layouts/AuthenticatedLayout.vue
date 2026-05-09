@@ -77,35 +77,83 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 overflow-y-scroll neo-scrollbar px-2 mt-3 space-y-1 pb-4" style="-webkit-overflow-scrolling: touch;">
-        <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label dark:text-gray-400 px-1">MAIN MENU</div>
+      <nav class="flex-1 overflow-y-scroll neo-scrollbar px-2 mt-3 pb-4 space-y-0.5" style="-webkit-overflow-scrolling: touch;">
+
+        <!-- ── MAIN MENU ─────────────────────────────────── -->
+        <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label dark:text-gray-400 px-1 mb-1">MAIN MENU</div>
 
         <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')" icon="home" label="My Dashboard" :collapsed="sidebarCollapsed" />
-        <SidebarLink v-if="currentEvent" :href="route('events.dashboard', currentEvent.slug)" :active="route().current('events.dashboard')" icon="grid_view" label="Event Dashboard" :collapsed="sidebarCollapsed" />
-        <SidebarLink v-if="currentEvent" :href="route('events.vote.index', currentEvent.slug)" :active="route().current('events.vote.*')" icon="how_to_vote" label="Live Ballots" :collapsed="sidebarCollapsed" />
-        <SidebarLink v-if="currentEvent" :href="route('events.results', currentEvent.slug)" :active="route().current('events.results')" icon="analytics" label="Results" :collapsed="sidebarCollapsed" />
-        <SidebarLink :href="route('profile.edit')" :active="route().current('profile.*')" icon="manage_accounts" label="My Profile" :collapsed="sidebarCollapsed" />
+        <SidebarLink :href="route('events.create')" :active="route().current('events.create')" icon="add_circle" label="Buat Event" :collapsed="sidebarCollapsed" />
+        <SidebarLink :href="route('profile.edit')" :active="route().current('profile.*')" icon="manage_accounts" label="Profil Saya" :collapsed="sidebarCollapsed" />
 
-        <!-- Admin Nav -->
+        <!-- ── EVENT PARTICIPANT MENU ─────────────────────── -->
+        <template v-if="currentEvent">
+          <div class="pt-3 mt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700 mb-1">
+            <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label flex items-center gap-2 dark:text-gray-400">
+              <span class="w-2 h-2 bg-neo-blue"></span>
+              EVENT SAAT INI
+            </div>
+          </div>
+
+          <SidebarLink :href="route('events.dashboard', currentEvent.slug)" :active="route().current('events.dashboard')" icon="grid_view" label="Beranda Event" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.vote.index', currentEvent.slug)" :active="route().current('events.vote.*')" icon="how_to_vote" label="Pilih Kandidat" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.results', currentEvent.slug)" :active="route().current('events.results')" icon="analytics" label="Hasil Voting" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.ai.chat', currentEvent.slug)" :active="route().current('events.ai.*')" icon="smart_toy" label="AI Asisten" :collapsed="sidebarCollapsed" />
+        </template>
+
+        <!-- ── ADMIN ZONE ─────────────────────────────────── -->
         <template v-if="isAdmin && currentEvent">
-          <div class="pt-3 mt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700">
+          <div class="pt-3 mt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700 mb-1">
             <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label flex items-center gap-2 dark:text-gray-400">
               <span class="w-2 h-2 bg-neo-red animate-pulse"></span>
               ADMIN ZONE
             </div>
           </div>
-          <SidebarLink :href="route('events.admin.results', currentEvent.slug)" :active="route().current('events.admin.results')" icon="leaderboard" label="Admin Results" :collapsed="sidebarCollapsed" />
-          <SidebarLink :href="route('events.admin.elections.index', currentEvent.slug)" :active="route().current('events.admin.elections.*') || route().current('events.admin.candidates.*')" icon="event" label="Manage Elections" :collapsed="sidebarCollapsed" />
-          <SidebarLink :href="route('events.admin.users.index', currentEvent.slug)" :active="route().current('events.admin.users.*')" icon="group" label="Members" :collapsed="sidebarCollapsed" />
 
+          <SidebarLink
+            :href="route('events.admin.results', currentEvent.slug)"
+            :active="route().current('events.admin.results')"
+            icon="leaderboard"
+            label="Rekap Hasil"
+            :collapsed="sidebarCollapsed"
+          />
+          <SidebarLink
+            :href="route('events.admin.elections.index', currentEvent.slug)"
+            :active="route().current('events.admin.elections.*') || route().current('events.admin.candidates.*')"
+            icon="event"
+            label="Kelola Pemilihan"
+            :collapsed="sidebarCollapsed"
+          />
+          <SidebarLink
+            :href="route('events.admin.elections.history', currentEvent.slug)"
+            :active="route().current('events.admin.elections.history')"
+            icon="history"
+            label="Riwayat Pemilihan"
+            :collapsed="sidebarCollapsed"
+          />
+          <SidebarLink
+            :href="route('events.admin.users.index', currentEvent.slug)"
+            :active="route().current('events.admin.users.*')"
+            icon="group"
+            label="Anggota Event"
+            :collapsed="sidebarCollapsed"
+          />
+
+          <!-- ── SUPER ADMIN ONLY ──────────────────────────── -->
           <template v-if="user?.role === 'super_admin'">
-            <div class="pt-2 mt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
+            <div class="pt-2 mt-2 border-t border-dashed border-gray-200 dark:border-gray-700 mb-1">
               <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label flex items-center gap-2 dark:text-gray-400">
                 <span class="w-2 h-2 bg-neo-yellow"></span>
                 SUPER ADMIN
               </div>
             </div>
-            <SidebarLink :href="route('events.admin.settings', currentEvent.slug)" :active="route().current('events.admin.settings')" icon="settings" label="Event Settings" :collapsed="sidebarCollapsed" />
+            <SidebarLink
+              :href="route('events.admin.settings', currentEvent.slug)"
+              :active="route().current('events.admin.settings')"
+              icon="settings"
+              label="Pengaturan Event"
+              :collapsed="sidebarCollapsed"
+            />
           </template>
         </template>
       </nav>
