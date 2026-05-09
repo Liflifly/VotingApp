@@ -93,8 +93,9 @@ import { ref, watch, nextTick, onUnmounted } from 'vue';
 const props = defineProps({
   show:          { type: Boolean, default: false },
   imageSrc:      { type: String,  default: null },
-  cropShape:     { type: String,  default: 'circle' },   // 'circle' | 'square'
-  outputSize:    { type: Number,  default: 512 },
+  cropShape:     { type: String,  default: 'circle' },   // 'circle' | 'square' | 'rect'
+  aspectRatio:   { type: Number,  default: 1 },         // Width / Height
+  outputSize:    { type: Number,  default: 512 },       // Base size (usually width)
   outputQuality: { type: Number,  default: 0.92 },
 });
 
@@ -112,7 +113,8 @@ const rotation    = ref(0); // Degrees: 0, 90, 180, 270
 let img       = null;   // HTMLImageElement (original image)
 let activeSource = null; // HTMLImageElement or HTMLCanvasElement (rotated source)
 let ctx       = null;   // CanvasRenderingContext2D
-let canvasSize = 0;     // px (square)
+let canvasW   = 0;      
+let canvasH   = 0;
 
 let offsetX   = 0;
 let offsetY   = 0;
@@ -159,9 +161,11 @@ function loadImage() {
   const canvas = canvasRef.value;
   if (!wrap || !canvas) return;
 
-  canvasSize = wrap.clientWidth;
-  canvas.width  = canvasSize;
-  canvas.height = canvasSize;
+  canvasW = wrap.clientWidth;
+  canvasH = canvasW / props.aspectRatio;
+  
+  canvas.width  = canvasW;
+  canvas.height = canvasH;
   ctx = canvas.getContext('2d');
 
   img = new Image();
@@ -211,9 +215,9 @@ function updateActiveSource() {
   const srcW = getImgWidth(activeSource);
   const srcH = getImgHeight(activeSource);
   
-  // Calculate fit scale — image must COVER the canvas (fill, not fit)
-  const scaleX = canvasSize / srcW;
-  const scaleY = canvasSize / srcH;
+  // Calculate fit scale — image must COVER the canvas
+  const scaleX = canvasW / srcW;
+  const scaleY = canvasH / srcH;
   minScale = Math.max(scaleX, scaleY);
   maxScale = minScale * ZOOM_MULT;
   
@@ -221,8 +225,8 @@ function updateActiveSource() {
   scale = minScale + (zoomPercent.value / 100) * (maxScale - minScale);
 
   // Center the image
-  offsetX = (canvasSize - srcW * scale) / 2;
-  offsetY = (canvasSize - srcH * scale) / 2;
+  offsetX = (canvasW - srcW * scale) / 2;
+  offsetY = (canvasH - srcH * scale) / 2;
 
   draw();
 }
@@ -234,10 +238,11 @@ function onRotationSliderChange() {
 // ── Draw frame ────────────────────────────────────────────────────────────────
 function draw() {
   if (!ctx || !activeSource) return;
-  const s = canvasSize;
+  const w = canvasW;
+  const h = canvasH;
 
   // Clear
-  ctx.clearRect(0, 0, s, s);
+  ctx.clearRect(0, 0, w, h);
 
   // Draw scaled image
   ctx.drawImage(
@@ -253,24 +258,23 @@ function draw() {
   if (props.cropShape === 'circle') {
     // Draw dark overlay everywhere, then cut out a circle
     ctx.beginPath();
-    ctx.rect(0, 0, s, s);
-    ctx.arc(s / 2, s / 2, s / 2, 0, Math.PI * 2, true);
+    ctx.rect(0, 0, w, h);
+    ctx.arc(w / 2, h / 2, Math.min(w, h) / 2, 0, Math.PI * 2, true);
     ctx.closePath();
     ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
     ctx.fill();
 
     // Circle border
     ctx.beginPath();
-    ctx.arc(s / 2, s / 2, s / 2 - 1, 0, Math.PI * 2);
+    ctx.arc(w / 2, h / 2, Math.min(w, h) / 2 - 1, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.stroke();
   } else {
-    // Square crop — add subtle corner markers instead of full overlay
-    // Draw thin border around entire canvas
+    // Square/Rect crop
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
     ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, s - 2, s - 2);
+    ctx.strokeRect(1, 1, w - 2, h - 2);
 
     // Corner brackets
     const corner = 24;
@@ -283,15 +287,15 @@ function draw() {
     ctx.stroke();
     // Top-right
     ctx.beginPath();
-    ctx.moveTo(s - corner, 1); ctx.lineTo(s - 1, 1); ctx.lineTo(s - 1, corner);
+    ctx.moveTo(w - corner, 1); ctx.lineTo(w - 1, 1); ctx.lineTo(w - 1, corner);
     ctx.stroke();
     // Bottom-left
     ctx.beginPath();
-    ctx.moveTo(1, s - corner); ctx.lineTo(1, s - 1); ctx.lineTo(corner, s - 1);
+    ctx.moveTo(1, h - corner); ctx.lineTo(1, h - 1); ctx.lineTo(corner, h - 1);
     ctx.stroke();
     // Bottom-right
     ctx.beginPath();
-    ctx.moveTo(s - corner, s - 1); ctx.lineTo(s - 1, s - 1); ctx.lineTo(s - 1, s - corner);
+    ctx.moveTo(w - corner, h - 1); ctx.lineTo(w - 1, h - 1); ctx.lineTo(w - 1, h - corner);
     ctx.stroke();
   }
 
@@ -305,12 +309,12 @@ function clampOffset() {
   const imgH = getImgHeight(activeSource) * scale;
 
   // Image must cover the entire canvas — no gap allowed
-  // Max offset (image left/top edge can't go past canvas left/top)
+  // Max offset
   const maxOX = 0;
   const maxOY = 0;
-  // Min offset (image right/bottom edge can't go before canvas right/bottom)
-  const minOX = canvasSize - imgW;
-  const minOY = canvasSize - imgH;
+  // Min offset
+  const minOX = canvasW - imgW;
+  const minOY = canvasH - imgH;
 
   offsetX = Math.min(maxOX, Math.max(minOX, offsetX));
   offsetY = Math.min(maxOY, Math.max(minOY, offsetY));
@@ -428,26 +432,21 @@ function doCrop() {
   processing.value = true;
 
   try {
-    const outSize = props.outputSize;
+    const outW = props.outputSize;
+    const outH = outW / props.aspectRatio;
+    
     const outCanvas = document.createElement('canvas');
-    outCanvas.width  = outSize;
-    outCanvas.height = outSize;
+    outCanvas.width  = outW;
+    outCanvas.height = outH;
     const outCtx = outCanvas.getContext('2d');
-
-    // The visible canvas maps 1:1 to the crop area.
-    // We need to figure out what portion of the original image is visible
-    // and draw that at output resolution.
-    const ratio = outSize / canvasSize;
 
     outCtx.drawImage(
       activeSource,
-      // Source: map from canvas coords back to image coords
       -offsetX / scale,
       -offsetY / scale,
-      canvasSize / scale,
-      canvasSize / scale,
-      // Destination: fill entire output canvas
-      0, 0, outSize, outSize
+      canvasW / scale,
+      canvasH / scale,
+      0, 0, outW, outH
     );
 
     // If circle, clip to circle (for transparent PNG — but we output JPEG so this is aesthetic only)
@@ -528,7 +527,7 @@ onUnmounted(() => {
    ═══════════════════════════════════════════════════════════════ */
 .neo-crop-canvas-wrap {
   width: min(340px, calc(100vw - 60px));
-  height: min(340px, calc(100vw - 60px));
+  height: auto;
   margin: 0 auto;
   background: #000;
   position: relative;

@@ -178,7 +178,7 @@ Route::prefix('/e/{event:slug}')
             Route::post('/settings/tokens', [EventSettingsController::class, 'generateToken'])->name('events.admin.tokens.generate');
             Route::delete('/settings/tokens/{token}', [EventSettingsController::class, 'revokeToken'])->name('events.admin.tokens.revoke');
             Route::post('/settings/regenerate-links', [EventSettingsController::class, 'regenerateLinks'])->name('events.admin.links.regenerate');
-            Route::put('/settings/fields', [EventSettingsController::class, 'updateFields'])->name('events.admin.fields.update');
+            Route::post('/settings/fields', [EventSettingsController::class, 'updateFields'])->name('events.admin.fields.update');
             Route::put('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('events.admin.users.role');
             Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('events.admin.users.destroy');
         });
@@ -190,6 +190,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'deleteAvatar'])->name('profile.avatar.destroy');
 });
 
 // ─── Auth Routes ──────────────────────────────────────────────────────────────

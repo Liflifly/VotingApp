@@ -40,9 +40,9 @@
           </div>
         </div>
         <div class="mb-5 flex">
-          <Link :href="route('home')" class="inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white font-heading text-[10px] md:text-xs font-black uppercase tracking-wider text-neo-black dark:text-white shadow-[3px_3px_0px_#000] hover:bg-neo-yellow hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0px_#000] active:shadow-none transition-all duration-100 group focus:outline-none">
+          <Link :href="route('dashboard')" class="inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white font-heading text-[10px] md:text-xs font-black uppercase tracking-wider text-neo-black dark:text-white shadow-[3px_3px_0px_#000] hover:bg-neo-yellow hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0px_#000] active:shadow-none transition-all duration-100 group focus:outline-none">
             <span class="material-symbols-outlined text-base font-bold group-hover:-translate-x-1 transition-transform text-neo-blue">arrow_back</span>
-            BACK TO HOME
+            BACK TO DASHBOARD
           </Link>
         </div>
         <h2 class="font-heading font-black text-h2 uppercase text-neo-black dark:text-white mb-1">{{ title }}</h2>

@@ -1,5 +1,6 @@
 <template>
   <AuthenticatedLayout title="MANAGE CANDIDATES">
+    <NeoConfirm v-bind="confirmProps" @confirm="onConfirm" @cancel="onCancel" />
     <!-- Breadcrumb Navigation -->
     <div class="mb-5 flex">
       <Link 
@@ -97,18 +98,26 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Link, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import NeoConfirm from '@/Components/NeoConfirm.vue';
+import { useNeoConfirm } from '@/Composables/useNeoConfirm.js';
 
 const props = defineProps({ election: Object, event: Object, candidates: Array });
 
-const showConfirm = ref(false);
-const pendingDelete = ref(null);
+const { confirmProps, neoConfirm, onConfirm, onCancel } = useNeoConfirm();
 
-const confirmDelete = (candidate) => {
-  if (confirm(`Delete candidate "${candidate.fields?.name || 'this candidate'}"? This cannot be undone.`)) {
+const confirmDelete = async (candidate) => {
+  const name = candidate.fields?.name || 'this candidate';
+  const ok = await neoConfirm({
+    title:        `Delete Candidate?`,
+    message:      `You are about to permanently delete "${name}". All associated votes and data will also be removed. This cannot be undone.`,
+    variant:      'danger',
+    confirmLabel: 'DELETE',
+  });
+  if (ok) {
     router.delete(route('events.admin.candidates.destroy', {
       event: props.event.slug,
       election: props.election.id,
-      candidate: candidate.id
+      candidate: candidate.id,
     }));
   }
 };

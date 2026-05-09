@@ -3,38 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
-use App\Models\EventInviteToken;
 use App\Models\EventFieldDefinition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class EventSettingsController extends Controller
 {
     public function edit(Request $request, Event $event)
     {
-        $event->load('fieldDefinitions', 'inviteTokens');
-
         $voterFields     = $event->voterFieldDefinitions()->get()->map->toFormField();
         $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
-        $tokens          = $event->inviteTokens()->valid()->get()->map(fn ($t) => [
-            'id'         => $t->id,
-            'token'      => $t->token,
-            'role'       => $t->role,
-            'expires_at' => $t->expires_at?->toISOString(),
-        ]);
 
         // Build full shareable URLs
         $voterLink = url("/join/v/{$event->voter_access_token}");
         $adminLink = url("/join/a/{$event->admin_access_token}");
 
         return Inertia::render('Admin/EventSettings', [
-            'event'          => $event,
-            'voterFields'    => $voterFields,
-            'candidateFields'=> $candidateFields,
-            'tokens'         => $tokens,
-            'voterLink'      => $voterLink,
-            'adminLink'      => $adminLink,
+            'event'           => $event,
+            'voterFields'     => $voterFields,
+            'candidateFields' => $candidateFields,
+            'voterLink'       => $voterLink,
+            'adminLink'       => $adminLink,
         ]);
     }
 
@@ -101,34 +92,39 @@ class EventSettingsController extends Controller
     public function updateFields(Request $request, Event $event)
     {
         $validated = $request->validate([
-            'target' => ['required', 'in:voter,candidate'],
-            'fields' => ['required', 'array'],
+            'target'            => ['required', 'in:voter,candidate'],
+            'fields'            => ['present', 'array'],
             'fields.*.key'      => ['required', 'string', 'alpha_dash', 'max:64'],
             'fields.*.label'    => ['required', 'string', 'max:255'],
             'fields.*.type'     => ['required', 'in:text,textarea,number,email,select,image'],
             'fields.*.options'  => ['nullable', 'array'],
-            'fields.*.required' => ['required', 'boolean'],
+            'fields.*.required'   => ['required', 'boolean'],
+            'fields.*.is_primary' => ['nullable', 'boolean'],
         ]);
 
         $target = $validated['target'];
 
-        // Delete existing definitions for this target
-        $event->fieldDefinitions()->where('target', $target)->delete();
+        DB::transaction(function () use ($event, $target, $validated) {
+            // Delete existing definitions for this target
+            $event->fieldDefinitions()->where('target', $target)->delete();
 
-        // Insert new definitions
-        foreach ($validated['fields'] as $index => $field) {
-            EventFieldDefinition::create([
-                'event_id' => $event->id,
-                'target'   => $target,
-                'key'      => $field['key'],
-                'label'    => $field['label'],
-                'type'     => $field['type'],
-                'options'  => $field['options'] ?? null,
-                'required' => $field['required'],
-                'order'    => $index,
-            ]);
-        }
+            // Insert new definitions
+            foreach ($validated['fields'] as $index => $field) {
+                EventFieldDefinition::create([
+                    'event_id' => $event->id,
+                    'target'   => $target,
+                    'key'      => $field['key'],
+                    'label'    => $field['label'],
+                    'type'       => $field['type'],
+                    'options'    => $field['options'] ?? null,
+                    'required'   => $field['required'],
+                    'is_primary' => $field['is_primary'] ?? false,
+                    'order'      => $index,
+                ]);
+            }
+        });
 
-        return back()->with('success', ucfirst($target) . ' fields updated.');
+        return redirect()->route('events.admin.settings', $event->slug)
+            ->with('success', ucfirst($target) . ' fields updated.');
     }
 }

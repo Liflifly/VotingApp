@@ -14,12 +14,14 @@ class EventFieldDefinition extends Model
         'type',
         'options',
         'required',
+        'is_primary',
         'order',
     ];
 
     protected $casts = [
-        'options'  => 'array',
-        'required' => 'boolean',
+        'options'    => 'array',
+        'required'   => 'boolean',
+        'is_primary' => 'boolean',
     ];
 
     // ─── Relationships ───────────────────────────────────────────────────────
@@ -42,8 +44,9 @@ class EventFieldDefinition extends Model
             'label'    => $this->label,
             'type'     => $this->type,
             'options'  => $this->options ?? [],
-            'required' => $this->required,
-            'order'    => $this->order,
+            'required'   => $this->required,
+            'is_primary' => $this->is_primary,
+            'order'      => $this->order,
         ];
     }
 }

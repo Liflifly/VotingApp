@@ -3,7 +3,7 @@
 
     <!-- Page Header -->
     <div class="neo-page-header bg-white dark:bg-neo-dark-card mb-6 md:mb-8 shadow-neo dark:shadow-neo-white">
-      <div class="absolute top-0 right-0 w-16 h-16 bg-neo-blue/10 border-l-2 border-b-2 border-neo-blue/20"></div>
+      <div class="absolute top-0 right-0 w-10 h-10 bg-neo-yellow border-l-2 border-b-2 border-neo-black dark:border-white z-0"></div>
       <div class="relative z-10 flex items-center gap-3">
         <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">manage_accounts</span>
         <div>

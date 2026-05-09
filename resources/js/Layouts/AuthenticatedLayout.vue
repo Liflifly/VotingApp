@@ -83,22 +83,22 @@
         <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label dark:text-gray-400 px-1 mb-1">MAIN MENU</div>
 
         <SidebarLink :href="route('dashboard')" :active="route().current('dashboard')" icon="home" label="My Dashboard" :collapsed="sidebarCollapsed" />
-        <SidebarLink :href="route('events.create')" :active="route().current('events.create')" icon="add_circle" label="Buat Event" :collapsed="sidebarCollapsed" />
-        <SidebarLink :href="route('profile.edit')" :active="route().current('profile.*')" icon="manage_accounts" label="Profil Saya" :collapsed="sidebarCollapsed" />
+        <SidebarLink :href="route('events.create')" :active="route().current('events.create')" icon="add_circle" label="Create Event" :collapsed="sidebarCollapsed" />
+        <SidebarLink :href="route('profile.edit')" :active="route().current('profile.*')" icon="manage_accounts" label="My Profile" :collapsed="sidebarCollapsed" />
 
         <!-- ── EVENT PARTICIPANT MENU ─────────────────────── -->
         <template v-if="currentEvent">
           <div class="pt-3 mt-3 border-t-2 border-dashed border-gray-200 dark:border-gray-700 mb-1">
             <div v-if="!sidebarCollapsed" class="neo-sidebar-section-label flex items-center gap-2 dark:text-gray-400">
               <span class="w-2 h-2 bg-neo-blue"></span>
-              EVENT SAAT INI
+              CURRENT EVENT
             </div>
           </div>
 
-          <SidebarLink :href="route('events.dashboard', currentEvent.slug)" :active="route().current('events.dashboard')" icon="grid_view" label="Beranda Event" :collapsed="sidebarCollapsed" />
-          <SidebarLink :href="route('events.vote.index', currentEvent.slug)" :active="route().current('events.vote.*')" icon="how_to_vote" label="Pilih Kandidat" :collapsed="sidebarCollapsed" />
-          <SidebarLink :href="route('events.results', currentEvent.slug)" :active="route().current('events.results')" icon="analytics" label="Hasil Voting" :collapsed="sidebarCollapsed" />
-          <SidebarLink :href="route('events.ai.chat', currentEvent.slug)" :active="route().current('events.ai.*')" icon="smart_toy" label="AI Asisten" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.dashboard', currentEvent.slug)" :active="route().current('events.dashboard')" icon="grid_view" label="Event Dashboard" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.vote.index', currentEvent.slug)" :active="route().current('events.vote.*')" icon="how_to_vote" label="Cast Vote" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.results', currentEvent.slug)" :active="route().current('events.results')" icon="analytics" label="Live Results" :collapsed="sidebarCollapsed" />
+          <SidebarLink :href="route('events.ai.chat', currentEvent.slug)" :active="route().current('events.ai.*')" icon="smart_toy" label="AI Assistant" :collapsed="sidebarCollapsed" />
         </template>
 
         <!-- ── ADMIN ZONE ─────────────────────────────────── -->
@@ -114,28 +114,28 @@
             :href="route('events.admin.results', currentEvent.slug)"
             :active="route().current('events.admin.results')"
             icon="leaderboard"
-            label="Rekap Hasil"
+            label="Admin Results"
             :collapsed="sidebarCollapsed"
           />
           <SidebarLink
             :href="route('events.admin.elections.index', currentEvent.slug)"
             :active="route().current('events.admin.elections.*') || route().current('events.admin.candidates.*')"
             icon="event"
-            label="Kelola Pemilihan"
+            label="Manage Elections"
             :collapsed="sidebarCollapsed"
           />
           <SidebarLink
             :href="route('events.admin.elections.history', currentEvent.slug)"
             :active="route().current('events.admin.elections.history')"
             icon="history"
-            label="Riwayat Pemilihan"
+            label="Election History"
             :collapsed="sidebarCollapsed"
           />
           <SidebarLink
             :href="route('events.admin.users.index', currentEvent.slug)"
             :active="route().current('events.admin.users.*')"
             icon="group"
-            label="Anggota Event"
+            label="Members"
             :collapsed="sidebarCollapsed"
           />
 
@@ -151,7 +151,7 @@
               :href="route('events.admin.settings', currentEvent.slug)"
               :active="route().current('events.admin.settings')"
               icon="settings"
-              label="Pengaturan Event"
+              label="Event Settings"
               :collapsed="sidebarCollapsed"
             />
           </template>
@@ -205,7 +205,7 @@
 
         <!-- Mobile Topbar -->
         <div class="lg:hidden flex items-center justify-between px-4 h-14 relative z-10">
-          <button @click="sidebarOpen = true" class="w-10 h-10 border-2 border-white flex items-center justify-center hover:bg-white hover:text-neo-black transition-colors">
+          <button @click="sidebarOpen = true" class="w-10 h-10 border-2 border-white/40 hover:border-white flex items-center justify-center hover:bg-white/10 transition-colors">
             <span class="material-symbols-outlined">menu</span>
           </button>
           <div class="font-heading font-black text-base tracking-tight">VUWOTING<span class="text-neo-yellow">&#8482;</span></div>

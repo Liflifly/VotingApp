@@ -1,5 +1,6 @@
 <template>
   <AuthenticatedLayout title="MANAGE MEMBERS">
+    <NeoConfirm v-bind="confirmProps" @confirm="onConfirm" @cancel="onCancel" />
     <!-- Header -->
     <div class="neo-page-header bg-white shadow-neo mb-6 md:mb-8">
       <div class="absolute top-0 right-0 w-16 h-16 bg-neo-red/10 border-l-2 border-b-2 border-neo-red/20"></div>
@@ -65,10 +66,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import NeoConfirm from '@/Components/NeoConfirm.vue';
+import { useNeoConfirm } from '@/Composables/useNeoConfirm.js';
 
 const props = defineProps({ event: Object, members: Array });
 
 const openDropdown = ref(null);
+const { confirmProps, neoConfirm, onConfirm, onCancel } = useNeoConfirm();
 
 const toggleDropdown = (id) => { openDropdown.value = openDropdown.value === id ? null : id; };
 const closeDropdown = () => { openDropdown.value = null; };
@@ -78,8 +82,14 @@ const updateRole = (user, newRole) => {
   router.put(route('events.admin.users.role', [props.event.slug, user.id]), { role: newRole });
 };
 
-const removeMember = (user) => {
-  if (confirm(`Are you sure you want to remove ${user.name} from this event?`)) {
+const removeMember = async (user) => {
+  const ok = await neoConfirm({
+    title:        `Remove Member?`,
+    message:      `Are you sure you want to remove "${user.name}" from this event? They will lose all access immediately.`,
+    variant:      'danger',
+    confirmLabel: 'REMOVE',
+  });
+  if (ok) {
     router.delete(route('events.admin.users.destroy', [props.event.slug, user.id]));
   }
 };

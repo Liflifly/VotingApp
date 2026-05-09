@@ -1,23 +1,58 @@
 <template>
   <AuthenticatedLayout title="EVENT SETTINGS">
-    <div class="neo-page-header bg-white shadow-neo mb-6 md:mb-8">
-      <div class="absolute top-0 right-0 w-16 h-16 bg-neo-yellow/10 border-l-2 border-b-2 border-neo-yellow/20"></div>
-      <div class="relative z-10">
-        <h1 class="font-heading font-black text-lg md:text-h1 uppercase mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
-          <span class="material-symbols-outlined text-neo-yellow text-2xl md:text-3xl">settings</span>
-          EVENT SETTINGS
-        </h1>
-        <p class="font-body text-xs md:text-sm text-neo-grey">Manage event details, share links, admins, and voter fields.</p>
+    <NeoConfirm v-bind="confirmProps" @confirm="onConfirm" @cancel="onCancel" />
+
+
+    <div id="general-info" class="neo-page-header bg-white shadow-neo mb-4 md:mb-6">
+      <div class="absolute top-0 right-0 w-10 h-10 bg-neo-yellow border-l-2 border-b-2 border-neo-black dark:border-white z-0"></div>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+        <div>
+          <h1 class="font-heading font-black text-lg md:text-h1 uppercase mb-1 md:mb-2 flex items-center gap-2 md:gap-3">
+            <span class="material-symbols-outlined text-neo-yellow text-2xl md:text-3xl">settings</span>
+            EVENT SETTINGS
+          </h1>
+          <p class="font-body text-xs md:text-sm text-neo-grey">Manage event details, share links, admins, and voter fields.</p>
+        </div>
+        <div>
+          <Link :href="route('dashboard')" class="neo-btn-secondary text-xs py-2 px-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            BACK TO DASHBOARD
+          </Link>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky Horizontal Quick Nav Header -->
+    <div class="sticky top-[3.5rem] z-[40] mb-8">
+      <div class="neo-card bg-white dark:bg-neo-dark-card p-2 md:p-3 shadow-neo relative overflow-hidden">
+
+        
+        <div class="flex gap-3 overflow-x-auto relative z-10 pb-3 pt-1 px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <button 
+            v-for="item in quickNav" 
+            :key="item.id"
+            @click="scrollTo(item.id)"
+            :class="[
+              'neo-btn text-xs px-6 py-2.5 gap-2 shrink-0',
+              'bg-white dark:bg-neo-dark-card text-neo-black dark:text-white hover:bg-neo-yellow hover:text-neo-black dark:hover:bg-neo-yellow dark:hover:text-neo-black'
+            ]"
+          >
+            <span class="material-symbols-outlined text-sm text-neo-blue">{{ item.icon }}</span>
+            {{ item.label }}
+          </button>
+          <!-- End Spacer -->
+          <div class="shrink-0 w-2 md:w-4"></div>
+        </div>
       </div>
     </div>
 
     <!-- ─── SHARE LINKS & QR CODES ───────────────────────────────────────── -->
-    <div class="neo-card p-4 md:p-6 mb-6 relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-12 h-12 bg-neo-blue/10 border-l-2 border-b-2 border-neo-blue/20"></div>
-      <div class="flex items-center justify-between mb-1">
+    <div id="share-links" class="neo-card p-4 md:p-6 mb-6 relative overflow-hidden">
+
+      <div class="flex items-center justify-between mb-1 relative z-10">
         <h3 class="font-heading font-black text-base uppercase dark:text-white flex items-center gap-2">
           <span class="material-symbols-outlined text-neo-blue">share</span>
-          Share Links & QR Codes
+          Share Links & <br> QR Codes
         </h3>
         <button
           @click="confirmRegenerateLinks"
@@ -156,28 +191,38 @@
           </div>
         </div>
 
-        <button type="submit" :disabled="settingsForm.processing" class="neo-btn-primary py-2 px-6">SAVE SETTINGS</button>
+        <div class="flex justify-start mt-4">
+          <button type="submit" :disabled="settingsForm.processing" class="neo-btn-primary text-xs py-2 px-4 flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">save</span>
+            SAVE SETTINGS
+          </button>
+        </div>
       </form>
     </div>
 
 
     <!-- ─── DYNAMIC FIELDS ────────────────────────────────────────────────── -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div id="dynamic-fields" class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-6">
       <DynamicFieldBuilder
+        id="section-voter-fields"
         v-model="voterFieldsLocal"
-        title="Data Pemilih (Voter Fields)"
-        description="Informasi yang dikumpulkan saat pengguna mendaftar sebagai pemilih."
+        title="Voter Fields"
+        description="Define custom information collected when a user joins as a voter."
         icon="how_to_vote"
         :processing="voterForm.processing"
+        :require-primary-key="true"
         @save="saveVoterFields"
+        @dirty="isDirty = true"
       />
       <DynamicFieldBuilder
+        id="section-candidate-fields"
         v-model="candidateFieldsLocal"
-        title="Data Kandidat (Candidate Fields)"
-        description="Informasi yang diperlukan untuk profil setiap kandidat."
+        title="Candidate Fields"
+        description="Define custom information required for candidate profiles."
         icon="person_pin"
         :processing="candidateForm.processing"
         @save="saveCandidateFields"
+        @dirty="isDirty = true"
       />
     </div>
   </AuthenticatedLayout>
@@ -186,9 +231,14 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import DynamicFieldBuilder from '@/Components/DynamicFieldBuilder.vue';
-import { useForm, router } from '@inertiajs/vue3';
-import { ref, onMounted, nextTick } from 'vue';
+import NeoConfirm from '@/Components/NeoConfirm.vue';
+import { useNeoConfirm } from '@/Composables/useNeoConfirm.js';
+import { useForm, router, Link } from '@inertiajs/vue3';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
 import QRCode from 'qrcode';
+
+const activeSection = ref('share-links');
+let observer = null;
 
 const props = defineProps({
   event:           Object,
@@ -198,10 +248,28 @@ const props = defineProps({
   adminLink:       String,
 });
 
+const { confirmProps, neoConfirm, onConfirm, onCancel } = useNeoConfirm();
+
 // ─── QR Code ──────────────────────────────────────────────────────────────────
 const voterQrContainer = ref(null);
 const adminQrContainer = ref(null);
 const copied = ref('');
+
+const quickNav = [
+  { id: 'share-links',            label: 'Share Links',  icon: 'link' },
+  { id: 'section-voter-fields',     label: 'Voter Fields', icon: 'how_to_vote' },
+  { id: 'section-candidate-fields', label: 'Candidate',    icon: 'person_pin' },
+];
+
+const scrollTo = (id) => {
+  const el = document.getElementById(id);
+  if (el) {
+    // 70px offset to accommodate the new sticky top nav bar
+    const yOffset = -70; 
+    const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({ top: y, behavior: 'smooth' });
+  }
+};
 
 const generateQr = async (container, url) => {
   if (!container || !url) return;
@@ -216,10 +284,50 @@ const generateQr = async (container, url) => {
   });
 };
 
+let removeBeforeListener = null;
+
 onMounted(async () => {
   await nextTick();
   generateQr(voterQrContainer.value, props.voterLink);
   generateQr(adminQrContainer.value, props.adminLink);
+  
+  // ─── Intersection Observer for Quick Nav ──────────────────────────────────────
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+        activeSection.value = entry.target.id;
+      }
+    });
+  }, { threshold: [0.1, 0.5, 0.8] });
+
+  quickNav.forEach(item => {
+    const el = document.getElementById(item.id);
+    if (el) observer.observe(el);
+  });
+
+  removeBeforeListener = router.on('before', (event) => {
+    // Only intercept GET navigations (leaving the page). Allow form submissions (POST/PUT/DELETE) to proceed.
+    if (isDirty.value && event.detail.visit.method === 'get') {
+      event.preventDefault();
+      neoConfirm({
+        title: 'Unsaved Changes',
+        message: 'You have unsaved changes in your Dynamic Fields. Are you sure you want to leave this page?',
+        variant: 'warning',
+        confirmText: 'Leave Anyway',
+        cancelText: 'Stay Here'
+      }).then((confirmed) => {
+        if (confirmed) {
+          isDirty.value = false;
+          router.visit(event.detail.visit.url);
+        }
+      });
+    }
+  });
+});
+
+onUnmounted(() => {
+  if (observer) observer.disconnect();
+  if (removeBeforeListener) removeBeforeListener();
 });
 
 const copyLink = async (url, type) => {
@@ -239,8 +347,14 @@ const downloadQr = (container, filename) => {
   a.click();
 };
 
-const confirmRegenerateLinks = () => {
-  if (confirm('⚠️ Regenerating links will invalidate ALL existing voter and admin QR codes and links. Are you sure?')) {
+const confirmRegenerateLinks = async () => {
+  const ok = await neoConfirm({
+    title:        'Regenerate Links?',
+    message:      'Regenerating will invalidate ALL existing voter and admin QR codes and links. This action cannot be undone.',
+    variant:      'warning',
+    confirmLabel: 'REGENERATE',
+  });
+  if (ok) {
     router.post(route('events.admin.links.regenerate', props.event.slug), {}, {
       onSuccess: () => {
         generateQr(voterQrContainer.value, props.voterLink);
@@ -269,15 +383,21 @@ const updateSettings = () => settingsForm.put(route('events.admin.settings.updat
 const voterFieldsLocal     = ref(JSON.parse(JSON.stringify(props.voterFields || [])));
 const candidateFieldsLocal = ref(JSON.parse(JSON.stringify(props.candidateFields || [])));
 
+const isDirty = ref(false);
+
 const voterForm = useForm({ target: 'voter', fields: [] });
 const saveVoterFields = () => {
   voterForm.fields = voterFieldsLocal.value;
-  voterForm.put(route('events.admin.fields.update', props.event.slug));
+  voterForm.post(route('events.admin.fields.update', props.event.slug), {
+    onSuccess: () => { isDirty.value = false; }
+  });
 };
 
 const candidateForm = useForm({ target: 'candidate', fields: [] });
 const saveCandidateFields = () => {
   candidateForm.fields = candidateFieldsLocal.value;
-  candidateForm.put(route('events.admin.fields.update', props.event.slug));
+  candidateForm.post(route('events.admin.fields.update', props.event.slug), {
+    onSuccess: () => { isDirty.value = false; }
+  });
 };
 </script>

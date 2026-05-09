@@ -13,10 +13,16 @@
           </h1>
           <p class="font-body text-xs md:text-sm text-neo-grey mt-1">Manage election cycles for this event</p>
         </div>
-        <Link :href="route('events.admin.elections.create', event.slug)" class="neo-btn-sm-primary">
-          <span class="material-symbols-outlined text-sm font-bold">add</span>
-          NEW ELECTION
-        </Link>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
+          <Link :href="route('dashboard')" class="neo-btn-sm-secondary flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            BACK TO DASHBOARD
+          </Link>
+          <Link :href="route('events.admin.elections.create', event.slug)" class="neo-btn-sm-primary flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-sm font-bold">add</span>
+            NEW ELECTION
+          </Link>
+        </div>
       </div>
     </div>
 
@@ -47,19 +53,19 @@
               {{ election.notes }}
             </div>
           </div>
-          <div class="flex flex-wrap gap-1.5 md:gap-2 md:shrink-0">
-            <Link :href="route('events.admin.elections.show', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary">DETAIL</Link>
-            <Link v-if="election.status === 'draft' || election.status === 'active'" :href="route('events.admin.elections.edit', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary">EDIT</Link>
-            <Link :href="route('events.admin.candidates.index', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary">CANDIDATES</Link>
+          <div class="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full md:w-auto mt-4 md:mt-0 md:shrink-0">
+            <Link :href="route('events.admin.elections.show', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary text-center justify-center">DETAIL</Link>
+            <Link v-if="election.status === 'draft' || election.status === 'active'" :href="route('events.admin.elections.edit', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary text-center justify-center">EDIT</Link>
+            <Link :href="route('events.admin.candidates.index', { event: event.slug, election: election.id })" class="neo-btn-sm-secondary text-center justify-center col-span-2 sm:col-span-1">CANDIDATES</Link>
             <button 
               v-if="election.status === 'draft'" 
               @click="handleActivateClick(election)" 
-              class="neo-btn-sm-primary"
+              class="neo-btn-sm-primary text-center justify-center"
             >
               ACTIVATE
             </button>
-            <button v-if="election.status === 'draft'" @click="promptAction(route('events.admin.elections.destroy', { event: event.slug, election: election.id }), 'Delete Draft?', 'This election and all its candidates will be permanently deleted.', 'YES, DELETE!', 'bg-neo-red', 'delete')" class="neo-btn-sm-danger">DELETE</button>
-            <button v-if="election.status === 'active'" @click="promptAction(route('events.admin.elections.end', { event: event.slug, election: election.id }), 'End Election?', 'This action cannot be undone.', 'YES, END!', 'bg-neo-red')" class="neo-btn-sm-danger">END</button>
+            <button v-if="election.status === 'draft'" @click="promptAction(route('events.admin.elections.destroy', { event: event.slug, election: election.id }), 'Delete Draft?', 'This election and all its candidates will be permanently deleted.', 'YES, DELETE!', 'bg-neo-red', 'delete')" class="neo-btn-sm-danger text-center justify-center">DELETE</button>
+            <button v-if="election.status === 'active'" @click="promptAction(route('events.admin.elections.end', { event: event.slug, election: election.id }), 'End Election?', 'This action cannot be undone.', 'YES, END!', 'bg-neo-red')" class="neo-btn-sm-danger text-center justify-center">END</button>
           </div>
         </div>
       </div>

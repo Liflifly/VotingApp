@@ -1,23 +1,29 @@
 <template>
   <AuthenticatedLayout title="MY DASHBOARD">
-      <!-- WELCOME + QUICK ACTIONS -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 md:mb-10">
-        <div>
-          <h1 class="font-heading font-black text-h1 md:text-display uppercase dark:text-white">
-            MY <span class="text-neo-blue">DASHBOARD</span>
-          </h1>
-          <p class="font-body text-sm text-neo-grey dark:text-gray-400 mt-1">
-            Welcome back, <strong>{{ $page.props.auth.user?.name }}</strong>
-          </p>
-        </div>
+      <!-- PAGE HEADER -->
+      <div class="neo-page-header bg-white dark:bg-neo-dark-card shadow-neo mb-8 md:mb-10">
+        <div class="absolute top-0 right-0 w-10 h-10 bg-neo-yellow border-l-2 border-b-2 border-neo-black dark:border-white z-0"></div>
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+          <div>
+            <h1 class="font-heading font-black text-lg md:text-h1 uppercase mb-1 md:mb-2 flex items-center gap-2 md:gap-3 dark:text-white">
+              <span class="material-symbols-outlined text-neo-blue text-2xl md:text-3xl">space_dashboard</span>
+              MY DASHBOARD
+            </h1>
+            <p class="font-body text-xs md:text-sm text-neo-grey dark:text-gray-400">
+              Welcome back, <strong>{{ $page.props.auth.user?.name }}</strong>. Manage your voting events and participation here.
+            </p>
+          </div>
 
-        <div class="flex gap-3">
-          <Link href="/events/create" class="neo-btn-primary text-sm">
-            + CREATE EVENT
-          </Link>
-          <button @click="showJoinInput = !showJoinInput" class="neo-btn-secondary text-sm">
-            JOIN EVENT
-          </button>
+          <div class="flex items-center gap-3">
+            <Link href="/events/create" class="neo-btn-primary text-xs py-2 px-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">add_circle</span>
+              CREATE EVENT
+            </Link>
+            <button @click="showJoinInput = !showJoinInput" class="neo-btn-secondary text-xs py-2 px-4 flex items-center gap-2">
+              <span class="material-symbols-outlined text-sm">group_add</span>
+              JOIN EVENT
+            </button>
+          </div>
         </div>
       </div>
 

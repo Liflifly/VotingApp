@@ -3,6 +3,11 @@
     <template v-for="field in fields" :key="field.key">
       <!-- Skip rendering 'name' if omitName is true (usually handled statically outside) -->
       <div v-if="!(omitName && field.key === 'name')">
+        <!-- Field Banner/Image -->
+        <div v-if="field.banner" class="mb-3">
+          <img :src="field.banner" class="w-full max-h-[300px] object-cover border-2 border-neo-black dark:border-white shadow-neo-sm" />
+        </div>
+
         <label class="block font-heading text-label-caps uppercase text-neo-black dark:text-white mb-2">
           {{ field.label }} <span v-if="field.required" class="text-neo-red">*</span>
         </label>
@@ -51,6 +56,15 @@
           </div>
         </div>
         
+        <input
+          v-else-if="field.type === 'number'"
+          type="number"
+          v-model="modelValue[field.key]"
+          class="neo-input"
+          :required="field.required"
+          step="any"
+        />
+
         <input
           v-else
           :type="field.type"
