@@ -14,7 +14,7 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next)
     {
         $user = $request->user();
-        $role = $request->get('_event_role');
+        $role = $request->get('_event_role') ?? $request->input('_event_role');
 
         if (! $user || ! in_array($role, ['admin', 'super_admin'])) {
             abort(403, 'Admin access required.');

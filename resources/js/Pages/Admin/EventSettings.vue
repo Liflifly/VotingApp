@@ -24,24 +24,19 @@
 
     <!-- Sticky Horizontal Quick Nav Header -->
     <div class="sticky top-[3.5rem] z-[40] mb-8">
-      <div class="neo-card bg-white dark:bg-neo-dark-card p-2 md:p-3 shadow-neo relative overflow-hidden">
+      <div class="neo-card bg-white dark:bg-neo-dark-card p-4 md:p-5 shadow-neo relative overflow-hidden">
 
         
-        <div class="flex gap-3 overflow-x-auto relative z-10 pb-3 pt-1 px-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <div class="grid grid-cols-2 gap-3 relative z-10">
           <button 
             v-for="item in quickNav" 
             :key="item.id"
             @click="scrollTo(item.id)"
-            :class="[
-              'neo-btn text-xs px-6 py-2.5 gap-2 shrink-0',
-              'bg-white dark:bg-neo-dark-card text-neo-black dark:text-white hover:bg-neo-yellow hover:text-neo-black dark:hover:bg-neo-yellow dark:hover:text-neo-black'
-            ]"
+            class="neo-btn-sm-secondary w-full flex items-center justify-center gap-2"
           >
             <span class="material-symbols-outlined text-sm text-neo-blue">{{ item.icon }}</span>
-            {{ item.label }}
+            <span class="font-heading text-xs font-bold uppercase tracking-wider">{{ item.label }}</span>
           </button>
-          <!-- End Spacer -->
-          <div class="shrink-0 w-2 md:w-4"></div>
         </div>
       </div>
     </div>
@@ -225,6 +220,29 @@
         @dirty="isDirty = true"
       />
     </div>
+
+    <!-- ─── DANGER ZONE ────────────────────────────────────────────────── -->
+    <div class="mt-12 md:mt-16 border-4 border-neo-red p-6 md:p-8 bg-neo-red/5 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-24 h-24 bg-neo-red/10 border-l-4 border-b-4 border-neo-red/20 rotate-45 translate-x-12 -translate-y-12"></div>
+      
+      <div class="relative z-10">
+        <h2 class="font-heading font-black text-xl md:text-2xl uppercase text-neo-red mb-2 flex items-center gap-3">
+          <span class="material-symbols-outlined text-3xl">dangerous</span>
+          DANGER ZONE
+        </h2>
+        <p class="font-body text-sm text-neo-red/80 mb-8 max-w-2xl">
+          Permanently delete this event and all associated data, including candidates, elections, voter registration, and all votes cast. <strong>This action is irreversible.</strong>
+        </p>
+
+        <button 
+          @click="confirmDeleteEvent"
+          class="neo-btn-danger text-xs py-3 px-6 flex items-center gap-2 shadow-[4px_4px_0px_#000] hover:shadow-[6px_6px_0px_#000]"
+        >
+          <span class="material-symbols-outlined text-sm">delete_forever</span>
+          DELETE ENTIRE EVENT
+        </button>
+      </div>
+    </div>
   </AuthenticatedLayout>
 </template>
 
@@ -256,7 +274,6 @@ const adminQrContainer = ref(null);
 const copied = ref('');
 
 const quickNav = [
-  { id: 'share-links',            label: 'Share Links',  icon: 'link' },
   { id: 'section-voter-fields',     label: 'Voter Fields', icon: 'how_to_vote' },
   { id: 'section-candidate-fields', label: 'Candidate',    icon: 'person_pin' },
 ];
@@ -399,5 +416,20 @@ const saveCandidateFields = () => {
   candidateForm.post(route('events.admin.fields.update', props.event.slug), {
     onSuccess: () => { isDirty.value = false; }
   });
+};
+
+const confirmDeleteEvent = async () => {
+  const ok = await neoConfirm({
+    title:           'Delete Entire Event?',
+    message:         `You are about to PERMANENTLY delete "${props.event.name}". This will remove ALL candidates, elections, and every single vote cast. There is no recovery.`,
+    variant:         'danger',
+    confirmLabel:    'DELETE EVERYTHING',
+    requireCheckbox: true,
+    checkboxLabel:   'I understand that this will erase all event data forever.',
+  });
+
+  if (ok) {
+    router.delete(route('events.admin.destroy', props.event.slug));
+  }
 };
 </script>

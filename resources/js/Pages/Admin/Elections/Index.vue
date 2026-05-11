@@ -14,7 +14,7 @@
           <p class="font-body text-xs md:text-sm text-neo-grey mt-1">Manage election cycles for this event</p>
         </div>
         <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto mt-4 sm:mt-0">
-          <Link :href="route('dashboard')" class="neo-btn-sm-secondary flex items-center justify-center gap-2">
+          <Link :href="route('dashboard')" class="neo-btn-secondary text-xs py-2 px-4 flex items-center gap-2">
             <span class="material-symbols-outlined text-sm">arrow_back</span>
             BACK TO DASHBOARD
           </Link>

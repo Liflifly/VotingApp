@@ -13,22 +13,26 @@ import { ref } from 'vue';
  */
 export function useNeoConfirm() {
   const confirmProps = ref({
-    modelValue:   false,
-    title:        'Are you sure?',
-    message:      'This action cannot be undone.',
-    confirmLabel: 'CONFIRM',
-    variant:      'danger',
+    modelValue:      false,
+    title:           'Are you sure?',
+    message:         'This action cannot be undone.',
+    confirmLabel:    'CONFIRM',
+    variant:         'danger',
+    requireCheckbox: false,
+    checkboxLabel:   'I understand that this action is permanent and cannot be undone.',
   });
 
   let _resolve = null;
 
-  const neoConfirm = ({ title, message, variant = 'danger', confirmLabel } = {}) => {
+  const neoConfirm = ({ title, message, variant = 'danger', confirmLabel, requireCheckbox = false, checkboxLabel } = {}) => {
     confirmProps.value = {
-      modelValue:   true,
-      title:        title        ?? 'Are you sure?',
-      message:      message      ?? 'This action cannot be undone.',
-      confirmLabel: confirmLabel ?? (variant === 'danger' ? 'DELETE' : 'CONFIRM'),
+      modelValue:      true,
+      title:           title        ?? 'Are you sure?',
+      message:         message      ?? 'This action cannot be undone.',
+      confirmLabel:    confirmLabel ?? (variant === 'danger' ? 'DELETE' : 'CONFIRM'),
       variant,
+      requireCheckbox,
+      checkboxLabel:   checkboxLabel ?? 'I understand that this action is permanent and cannot be undone.',
     };
 
     return new Promise((resolve) => {

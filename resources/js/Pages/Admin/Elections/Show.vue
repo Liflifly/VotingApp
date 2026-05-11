@@ -1,31 +1,34 @@
 <template>
   <AuthenticatedLayout title="ELECTION DETAIL">
     <div class="max-w-4xl">
-      <!-- Breadcrumb Navigation -->
-      <div class="mb-5 flex">
-        <Link 
-          :href="route('events.admin.elections.index', event.slug)" 
-          class="inline-flex items-center gap-2 px-3.5 py-2 bg-white dark:bg-neo-dark-card border-2 border-neo-black dark:border-white font-heading text-[10px] md:text-xs font-black uppercase tracking-wider text-neo-black dark:text-white shadow-[3px_3px_0px_#000] dark:shadow-[3px_3px_0px_rgba(255,255,255,0.8)] hover:bg-neo-yellow dark:hover:bg-neo-yellow hover:text-neo-black dark:hover:text-neo-black hover:translate-x-[1.5px] hover:translate-y-[1.5px] hover:shadow-[1.5px_1.5px_0px_#000] dark:hover:shadow-[1.5px_1.5px_0px_rgba(255,255,255,0.8)] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all duration-100 group"
-        >
-          <span class="material-symbols-outlined text-base font-bold group-hover:-translate-x-1 transition-transform text-neo-blue">arrow_back</span>
-          BACK TO ELECTIONS
-        </Link>
-      </div>
+
 
       <!-- Header -->
       <div class="neo-page-header bg-white dark:bg-neo-dark-card mb-6 shadow-neo dark:shadow-neo-white relative overflow-hidden p-6 border-3 border-neo-black dark:border-white">
         <div class="absolute top-0 right-0 w-12 h-12 bg-neo-blue/10 border-l-2 border-b-2 border-neo-blue/20"></div>
-        <div class="relative z-10 flex items-center gap-4 w-full">
-          <!-- Icon -->
-          <div class="hidden sm:flex w-12 h-12 bg-neo-blue border-2 border-neo-black dark:border-white shadow-[3px_3px_0px_#000] dark:shadow-[3px_3px_0px_rgba(255,255,255,0.8)] items-center justify-center shrink-0">
-            <span class="material-symbols-outlined text-white text-2xl">event_note</span>
-          </div>
-          
-          <div class="flex-1 min-w-0">
-            <div class="flex flex-wrap items-center gap-3">
-              <h1 class="font-heading font-black text-xl md:text-2xl uppercase break-all sm:break-words whitespace-normal leading-tight dark:text-white">{{ election.name }}</h1>
-              <span :class="statusBadge(election.status)" class="shrink-0">{{ election.status?.toUpperCase() }}</span>
+        <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <!-- Icon -->
+            <div class="hidden sm:flex w-12 h-12 bg-neo-blue border-2 border-neo-black dark:border-white shadow-[3px_3px_0px_#000] dark:shadow-[3px_3px_0px_rgba(255,255,255,0.8)] items-center justify-center shrink-0">
+              <span class="material-symbols-outlined text-white text-2xl">event_note</span>
             </div>
+            
+            <div class="flex-1 min-w-0">
+              <div class="flex flex-wrap items-center gap-3">
+                <h1 class="font-heading font-black text-xl md:text-2xl uppercase break-all sm:break-words whitespace-normal leading-tight dark:text-white">{{ election.name }}</h1>
+                <span :class="statusBadge(election.status)" class="shrink-0">{{ election.status?.toUpperCase() }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <Link 
+              :href="route('events.admin.elections.index', event.slug)" 
+              class="neo-btn-secondary text-xs py-2 px-4 flex items-center justify-center gap-2"
+            >
+              <span class="material-symbols-outlined text-sm">arrow_back</span>
+              BACK TO ELECTIONS
+            </Link>
           </div>
         </div>
       </div>

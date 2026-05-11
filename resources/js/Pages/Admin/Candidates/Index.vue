@@ -1,16 +1,7 @@
 <template>
   <AuthenticatedLayout title="MANAGE CANDIDATES">
     <NeoConfirm v-bind="confirmProps" @confirm="onConfirm" @cancel="onCancel" />
-    <!-- Breadcrumb Navigation -->
-    <div class="mb-5 flex">
-      <Link 
-        :href="route('events.admin.elections.index', event.slug)" 
-        class="neo-btn-sm-secondary group"
-      >
-        <span class="material-symbols-outlined text-base font-bold group-hover:-translate-x-1 transition-transform text-neo-blue">arrow_back</span>
-        BACK TO ELECTIONS
-      </Link>
-    </div>
+
 
     <!-- Header -->
     <div class="neo-page-header bg-white dark:bg-neo-dark-card mb-6 md:mb-8 shadow-neo dark:shadow-neo-white relative overflow-hidden p-6 md:p-8 border-3 border-neo-black dark:border-white">
@@ -43,20 +34,57 @@
           </div>
         </div>
 
-        <!-- Add Candidate Action -->
-        <div class="shrink-0 w-full md:w-auto">
+        <!-- Actions -->
+        <div class="shrink-0 w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <Link 
+            :href="route('events.admin.elections.index', event.slug)" 
+            class="neo-btn-secondary text-xs py-2 px-4 flex items-center justify-center gap-2"
+          >
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            BACK TO ELECTIONS
+          </Link>
+          <Link 
+            v-if="candidateFields.length > 0"
             :href="route('events.admin.candidates.create', { event: event.slug, election: election.id })" 
-            class="neo-btn-sm-primary w-full md:w-auto"
+            class="neo-btn-sm-primary flex-1 sm:flex-none justify-center"
           >
             <span class="material-symbols-outlined text-base">person_add</span>
             ADD CANDIDATE
           </Link>
+          <button 
+            v-else
+            class="neo-btn-sm-secondary opacity-50 cursor-not-allowed flex-1 sm:flex-none justify-center"
+            title="Candidate fields must be defined in Event Settings first"
+          >
+            <span class="material-symbols-outlined text-base">person_add_disabled</span>
+            ADD CANDIDATE
+          </button>
         </div>
       </div>
     </div>
 
-    <div v-if="!candidates.length" class="neo-card p-8 md:p-12 text-center relative overflow-hidden">
+    <div v-if="candidateFields.length === 0" class="neo-card p-6 md:p-8 border-l-8 border-neo-yellow bg-neo-yellow/5 mb-6 md:mb-8 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-12 h-12 bg-neo-yellow/10 border-l border-b border-neo-yellow/20"></div>
+      <div class="flex items-start gap-4">
+        <span class="material-symbols-outlined text-neo-yellow text-3xl font-bold bg-neo-black p-2 shadow-[3px_3px_0px_#000]">warning</span>
+        <div>
+          <h3 class="font-heading font-black text-lg md:text-xl uppercase mb-1 dark:text-white">CONFIGURATION REQUIRED</h3>
+          <p class="font-body text-xs md:text-sm text-neo-grey dark:text-gray-400 mb-4 max-w-2xl">
+            Candidate field definitions are missing. You must define what information is required for candidates (e.g. Photo, Vision, Mission) in the <strong>Event Settings</strong> before you can add candidates to any election.
+          </p>
+          <Link v-if="user?.role === 'super_admin'" :href="route('events.admin.settings', event.slug)" class="neo-btn-sm-secondary inline-flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">settings</span>
+            GO TO EVENT SETTINGS
+          </Link>
+          <div v-else class="flex items-center gap-2 text-neo-red font-bold text-xs uppercase">
+            <span class="material-symbols-outlined text-sm">lock</span>
+            Please ask the Event Owner (Super Admin) to configure fields.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="!candidates.length && candidateFields.length > 0" class="neo-card p-8 md:p-12 text-center relative overflow-hidden">
       <div class="absolute top-0 right-0 w-12 h-12 bg-neo-yellow/20 border-l-2 border-b-2 border-neo-yellow/30"></div>
       <h3 class="font-heading font-black text-h2 uppercase mb-2 dark:text-white">NO CANDIDATES YET</h3>
       <p class="font-body text-sm md:text-body-md text-neo-grey">Add candidates for this election period.</p>
@@ -101,7 +129,7 @@ import { ref } from 'vue';
 import NeoConfirm from '@/Components/NeoConfirm.vue';
 import { useNeoConfirm } from '@/Composables/useNeoConfirm.js';
 
-const props = defineProps({ election: Object, event: Object, candidates: Array });
+const props = defineProps({ election: Object, event: Object, candidates: Array, candidateFields: Array });
 
 const { confirmProps, neoConfirm, onConfirm, onCancel } = useNeoConfirm();
 

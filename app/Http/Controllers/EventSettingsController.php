@@ -16,6 +16,48 @@ class EventSettingsController extends Controller
         $voterFields     = $event->voterFieldDefinitions()->get()->map->toFormField();
         $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
 
+        // If no voter fields are defined yet, provide defaults for the builder
+        if ($voterFields->isEmpty()) {
+            $voterFields = [
+                [
+                    'key'        => 'name',
+                    'label'      => 'VOTER NAME',
+                    'type'       => 'text',
+                    'required'   => true,
+                    'is_primary' => false,
+                    'options'    => null,
+                ],
+                [
+                    'key'        => 'voter_id',
+                    'label'      => 'ID NUMBER (NIS/NIK)',
+                    'type'       => 'text',
+                    'required'   => true,
+                    'is_primary' => true,
+                    'options'    => null,
+                ]
+            ];
+        }
+
+        // If no candidate fields are defined yet, provide defaults for the builder
+        if ($candidateFields->isEmpty()) {
+            $candidateFields = [
+                [
+                    'key'      => 'order_number',
+                    'label'    => 'CANDIDATE NUMBER',
+                    'type'     => 'number',
+                    'required' => true,
+                    'options'  => null,
+                ],
+                [
+                    'key'      => 'name',
+                    'label'    => 'FULL NAME',
+                    'type'     => 'text',
+                    'required' => true,
+                    'options'  => null,
+                ]
+            ];
+        }
+
         // Build full shareable URLs
         $voterLink = url("/join/v/{$event->voter_access_token}");
         $adminLink = url("/join/a/{$event->admin_access_token}");
@@ -124,7 +166,21 @@ class EventSettingsController extends Controller
             }
         });
 
-        return redirect()->route('events.admin.settings', $event->slug)
+        return redirect()->route('events.admin.settings', $event)
             ->with('success', ucfirst($target) . ' fields updated.');
+    }
+
+    /**
+     * Permanently delete the event and all associated data.
+     */
+    public function destroy(Request $request, Event $event)
+    {
+        // Only the creator (super_admin) can delete the event
+        // This is already enforced by the 'super_admin' middleware on the route group
+        
+        $event->delete();
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Event deleted successfully.');
     }
 }

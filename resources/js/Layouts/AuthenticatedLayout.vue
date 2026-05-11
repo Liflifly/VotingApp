@@ -148,7 +148,7 @@
               </div>
             </div>
             <SidebarLink
-              :href="route('events.admin.settings', currentEvent.slug)"
+              :href="route('events.admin.settings', { event: currentEvent.slug })"
               :active="route().current('events.admin.settings')"
               icon="settings"
               label="Event Settings"

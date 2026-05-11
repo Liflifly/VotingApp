@@ -16,9 +16,21 @@ class HandleInertiaRequests extends Middleware
 
     public function share(Request $request): array
     {
-        $user     = $request->user();
-        $event    = $request->get('_current_event');
+        $user      = $request->user();
+        
+        // Robust detection: try merged data first, fallback to route parameters
+        $event     = $request->get('_current_event') ?? $request->route('event');
         $eventRole = $request->get('_event_role');
+
+        // If $event is just a string (slug), resolve it to a model to get the role
+        if (is_string($event)) {
+            $event = \App\Models\Event::where('slug', $event)->first();
+        }
+
+        // If we have an event but no role yet, resolve it manually
+        if ($event instanceof \App\Models\Event && $user && ! $eventRole) {
+            $eventRole = $event->getUserRole($user);
+        }
 
         return [
             ...parent::share($request),
@@ -30,11 +42,11 @@ class HandleInertiaRequests extends Middleware
                     'email'           => $user->email,
                     'avatar'          => $user->avatar ? '/storage/' . $user->avatar : null,
                     'avatar_original' => $user->avatar_original ? '/storage/' . $user->avatar_original : null,
-                    'role'            => $eventRole,  // Role is event-scoped
+                    'role'            => $eventRole, 
                 ] : null,
             ],
 
-            'currentEvent' => $event ? [
+            'currentEvent' => ($event instanceof \App\Models\Event) ? [
                 'id'                 => $event->id,
                 'name'               => $event->name,
                 'slug'               => $event->slug,

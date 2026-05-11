@@ -31,6 +31,11 @@ class AdminCandidateController extends Controller
     {
         $candidateFields = $event->candidateFieldDefinitions()->get()->map->toFormField();
 
+        if ($candidateFields->isEmpty()) {
+            return redirect()->route('events.admin.candidates.index', [$event, $election])
+                ->with('error', 'Please define candidate fields in Event Settings first.');
+        }
+
         return Inertia::render('Admin/Candidates/Create', compact('event', 'election', 'candidateFields'));
     }
 
@@ -44,7 +49,13 @@ class AdminCandidateController extends Controller
             'order_number' => ['nullable', 'integer', 'min:1'],
         ]);
 
-        $fieldDefs    = $event->candidateFieldDefinitions()->get();
+        $fieldDefs = $event->candidateFieldDefinitions()->get();
+        
+        if ($fieldDefs->isEmpty()) {
+            return redirect()->route('events.admin.candidates.index', [$event, $election])
+                ->with('error', 'Cannot add candidate: No fields defined in settings.');
+        }
+
         $fieldsData   = [];
         $dynamicRules = [];
 
@@ -52,6 +63,8 @@ class AdminCandidateController extends Controller
             $rules = $field->required ? ['required'] : ['nullable'];
             if ($field->type === 'image') {
                 $dynamicRules["fields.{$field->key}"] = [...$rules, 'file', 'image', 'mimes:jpeg,png,jpg,webp', 'max:4096'];
+            } elseif ($field->type === 'number') {
+                $dynamicRules["fields.{$field->key}"] = [...$rules, 'numeric'];
             } else {
                 $dynamicRules["fields.{$field->key}"] = [...$rules, 'string', 'max:2000'];
             }
@@ -68,10 +81,11 @@ class AdminCandidateController extends Controller
             }
         }
 
-        $nextOrder = $election->candidates()->max('order_number') + 1;
+        $nextOrder   = $election->candidates()->max('order_number') + 1;
+        $orderNumber = $fieldsData['order_number'] ?? $request->input('order_number') ?? $nextOrder;
 
         $election->candidates()->create([
-            'order_number' => $request->input('order_number') ?? $nextOrder,
+            'order_number' => $orderNumber,
             'fields'       => $fieldsData,
         ]);
 
@@ -128,7 +142,7 @@ class AdminCandidateController extends Controller
         }
 
         $candidate->update([
-            'order_number' => $request->input('order_number') ?: $candidate->order_number,
+            'order_number' => $fieldsData['order_number'] ?? $request->input('order_number') ?? $candidate->order_number,
             'fields'       => $fieldsData,
         ]);
 

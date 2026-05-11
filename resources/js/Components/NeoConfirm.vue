@@ -65,6 +65,22 @@
               <p class="font-body text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                 {{ message }}
               </p>
+
+              <!-- Checkbox for "Make Sure" -->
+              <div v-if="requireCheckbox" class="mt-4 flex items-start gap-3 p-3 bg-gray-50 dark:bg-neo-dark-surface border-2 border-neo-black dark:border-white">
+                <div class="relative flex items-center">
+                  <input
+                    id="confirm-checkbox"
+                    type="checkbox"
+                    v-model="isChecked"
+                    class="peer appearance-none w-5 h-5 border-2 border-neo-black dark:border-white bg-white dark:bg-neo-dark-card checked:bg-neo-blue transition-all cursor-pointer"
+                  />
+                  <span class="material-symbols-outlined absolute pointer-events-none text-white text-base font-black opacity-0 peer-checked:opacity-100 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">check</span>
+                </div>
+                <label for="confirm-checkbox" class="font-heading text-[10px] font-black uppercase text-neo-black dark:text-gray-300 leading-tight cursor-pointer select-none">
+                  {{ checkboxLabel }}
+                </label>
+              </div>
             </div>
 
             <!-- Footer -->
@@ -80,7 +96,8 @@
               <!-- Confirm -->
               <button
                 @click="handleConfirm"
-                class="text-xs py-2.5 px-5 min-w-[90px] justify-center font-heading font-black uppercase border-4 border-neo-black dark:border-white tracking-widest transition-all hover:-translate-y-0.5 flex items-center gap-2"
+                :disabled="requireCheckbox && !isChecked"
+                class="text-xs py-2.5 px-5 min-w-[90px] justify-center font-heading font-black uppercase border-4 border-neo-black dark:border-white tracking-widest transition-all hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
                 :class="[
                   variant === 'danger' ? 'bg-neo-red text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' :
                   variant === 'warning' ? 'bg-neo-yellow text-neo-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]' :
@@ -117,7 +134,11 @@ const props = defineProps({
   message:      { type: String,  default: 'This action cannot be undone.' },
   confirmLabel: { type: String,  default: 'CONFIRM' },
   variant:      { type: String,  default: 'danger' }, // 'danger' | 'warning' | 'info'
+  requireCheckbox: { type: Boolean, default: false },
+  checkboxLabel:   { type: String,  default: 'I understand that this action is permanent and cannot be undone.' },
 });
+
+const isChecked = ref(false);
 
 const emit = defineEmits(['update:modelValue', 'confirm', 'cancel']);
 
@@ -130,12 +151,15 @@ const confirmIcon = computed(() => {
 });
 
 const handleConfirm = () => {
+  if (props.requireCheckbox && !isChecked.value) return;
   emit('confirm');
   emit('update:modelValue', false);
+  isChecked.value = false; // Reset for next time
 };
 
 const handleCancel = () => {
   emit('cancel');
   emit('update:modelValue', false);
+  isChecked.value = false; // Reset for next time
 };
 </script>

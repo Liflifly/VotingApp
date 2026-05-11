@@ -179,6 +179,7 @@ Route::prefix('/e/{event:slug}')
             Route::delete('/settings/tokens/{token}', [EventSettingsController::class, 'revokeToken'])->name('events.admin.tokens.revoke');
             Route::post('/settings/regenerate-links', [EventSettingsController::class, 'regenerateLinks'])->name('events.admin.links.regenerate');
             Route::post('/settings/fields', [EventSettingsController::class, 'updateFields'])->name('events.admin.fields.update');
+            Route::delete('/settings', [EventSettingsController::class, 'destroy'])->name('events.admin.destroy');
             Route::put('/users/{user}/role', [AdminUserController::class, 'updateRole'])->name('events.admin.users.role');
             Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('events.admin.users.destroy');
         });

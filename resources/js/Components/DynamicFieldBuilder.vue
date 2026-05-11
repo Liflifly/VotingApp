@@ -268,9 +268,9 @@
                         <button 
                           type="button"
                           @click.stop="triggerBannerUpload(i)"
-                          class="neo-btn-sm-secondary !text-[8px] !px-3 !py-1.5 flex items-center gap-1.5"
+                          class="neo-btn-sm-secondary !text-[10px] !px-4 !py-2 flex items-center gap-2"
                         >
-                          <span class="material-symbols-outlined text-xs">cloud_upload</span>
+                          <span class="material-symbols-outlined text-sm">cloud_upload</span>
                           {{ f.banner ? 'CHANGE IMAGE' : 'SELECT IMAGE' }}
                         </button>
                         <button 
@@ -460,6 +460,7 @@
         :aspect-ratio="16 / 9"
         @crop="onCropDone"
       />
+      <NeoConfirm v-bind="confirmProps" @confirm="onConfirm" @cancel="onCancel" />
     </div>
   </div>
 </template>
@@ -467,6 +468,8 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue';
 import NeoCropper from '@/Components/NeoCropper.vue';
+import NeoConfirm from '@/Components/NeoConfirm.vue';
+import { useNeoConfirm } from '@/Composables/useNeoConfirm.js';
 
 const props = defineProps({
   id:          String,
@@ -477,6 +480,8 @@ const props = defineProps({
   icon:        { type: String, default: 'list_alt' },
   requirePrimaryKey: { type: Boolean, default: false },
 });
+
+const { confirmProps, neoConfirm, onConfirm, onCancel } = useNeoConfirm();
 
 const emit = defineEmits(['update:modelValue', 'save', 'dirty']);
 
@@ -585,12 +590,21 @@ const duplicateField = (index) => {
   emit('dirty');
 };
 
-const removeField = (index) => {
-  const newFields = [...props.modelValue];
-  newFields.splice(index, 1);
-  emit('update:modelValue', newFields);
-  focusedIndex.value = null;
-  emit('dirty');
+const removeField = async (index) => {
+  const ok = await neoConfirm({
+    title: 'DELETE FIELD?',
+    message: 'Are you sure you want to delete this field? This action cannot be undone.',
+    confirmLabel: 'YES, DELETE',
+    variant: 'danger',
+  });
+
+  if (ok) {
+    const newFields = [...props.modelValue];
+    newFields.splice(index, 1);
+    emit('update:modelValue', newFields);
+    focusedIndex.value = null;
+    emit('dirty');
+  }
 };
 
 const moveUp = (index) => {
